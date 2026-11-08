@@ -42,5 +42,5 @@ histórico da M1; coerente, pois o Compose não fixa a sub-rede).
 - `fig_m2_sqli.png` — sessão de administrador via injeção SQL e desafios reconhecidos.
 - `fig_m2_ftp.png` — listagem anônima do diretório `/ftp/`.
 
-Estas imagens foram incorporadas ao relatório final (`relatorio/M2_Relatorio_Final_diego_e_equipe.pdf`, Apêndice B.5, Figuras 12 e 13).
+Estas imagens foram incorporadas ao relatório final (`relatorio/M2_Relatorio_Final_diego_e_equipe.pdf`, Seção 8 (Validação), Figuras 7 e 8).
 Para incluir no repositório, podem ser copiadas para `trabalho2/evidencias/`.

@@ -17,7 +17,7 @@ Deck estático em HTML + CSS + JavaScript puro (ES modules), **sem build, sem fr
 | --- | --- |
 | `index.html` | Apresentação (slides) |
 | `css/`, `js/`, `assets/` | Motor do deck (ver `SDD` original) e slides |
-| `relatorio/M2_Relatorio_Final_diego_e_equipe.pdf` | **Relatório final** (PDF), com Apêndice B.5 de validação |
+| `relatorio/M2_Relatorio_Final_diego_e_equipe.pdf` | **Relatório final** (PDF), com a validação em laboratório (Seção 8) |
 | `trabalho2/modelo/` | Arquivo-fonte do modelo: `DFD_Juice_Shop.drawio`, `modelo_ameacas.json`, SVGs, `priorizacao.csv` |
 | `trabalho2/codigo/` | Scripts de validação, geração de diagramas e do relatório |
 | `trabalho2/evidencias/` | Capturas e extratos HTTP (M1) |
