@@ -23,7 +23,7 @@ export default () => SlideLayout({
           "Modelar de dentro para fora complementa o teste",
         ] }) })}
       </div>
-      ${Tradeoff({ left: "7 cenários confirmados na M1 + M2", right: "18 plausíveis, com teste pendente" })}
-      ${Highlight({ children: "Critérios de aceite permitem conferir cada mitigação com contas de teste; a revisão cruzada é o próximo passo." })}
+      ${Tradeoff({ left: "Resultados observados na M1 e na M2", right: "Hipóteses ainda sem reprodução" })}
+      ${Highlight({ children: "Revisão documental concluída; as mitigações propostas exigem implantação e verificação dos critérios de aceite." })}
     </div>`,
 });

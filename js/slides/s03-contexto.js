@@ -15,7 +15,7 @@ export default () => SlideLayout({
         ${Card({ accent: "violet", title: "Implantação (M1)", children: Bullets({ accent: "violet", items: [
           "Imagem oficial fixada por <strong>tag + digest</strong>",
           "Publicada só em <strong>127.0.0.1:3000</strong> (loopback)",
-          "Contêiner em rede Docker bridge isolada",
+          "Contêiner em rede Docker bridge do laboratório",
         ] }) })}
         ${Card({ accent: "pink", title: "Atores e ativos", children: Bullets({ accent: "pink", items: [
           "Visitante, cliente, <strong>admin</strong> e <strong>accounting</strong>",

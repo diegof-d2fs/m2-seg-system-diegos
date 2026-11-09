@@ -3188,7 +3188,7 @@
       ],
       "justificativas": [
         "O papel privilegiado pode alcançar dados e operações coletivas.",
-        "Há caminho e teste upstream, sem reprodução no laboratório da equipe.",
+        "O cadastro privilegiado foi reproduzido por HTTP no laboratório da equipe em 08/11/2026.",
         "A operação de registro é pública e o vetor é um campo do corpo.",
         "O papel pode afetar contas e compras de diversos titulares.",
         "O campo role é reconhecível pelo esquema e pelo código do desafio."
@@ -3698,8 +3698,8 @@
       ],
       "justificativas": [
         "A lista reúne dados identificáveis de várias contas.",
-        "A rota e o middleware são conhecidos, com confirmação local ainda pendente.",
-        "Uma sessão comum e cliente HTTP bastariam no cenário descrito.",
+        "A consulta por conta customer foi reproduzida por HTTP no laboratório em 08/11/2026.",
+        "Uma sessão customer e um cliente HTTP foram suficientes no ensaio local.",
         "Uma única listagem pode alcançar diversos titulares.",
         "A interface administrativa revela a rota de listagem em suas chamadas."
       ],

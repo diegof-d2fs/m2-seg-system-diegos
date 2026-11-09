@@ -20,7 +20,7 @@ export default () => SlideLayout({
       </div>
       <div class="apm-stack" style="gap:22px;justify-content:center">
         ${Card({ accent: "orange", style: compact, title: "T-FX3-06 · Cesta de outro titular — 8,4", children: Bullets({ size: 22, accent: "orange", items: ["JWT válido lê a cesta de <strong>outra conta</strong> (IDOR)", "Confirmada no T1 (V3) · CWE-639 · A01"] }) })}
-        ${Card({ accent: "turquoise", style: compact, title: "T-FX3-02 / T-FX3-07", children: Bullets({ size: 22, items: ["Checkout com referências de cesta alheia (7,8)", "Comprovante exposto pelo diretório /ftp/ (V5)"] }) })}
+        ${Card({ accent: "turquoise", style: compact, title: "T-FX3-02 / T-FX3-07", children: Bullets({ size: 22, items: ["Checkout com cesta alheia: hipótese (7,8)", "Comprovante de terceiro: hipótese; V5 lista /ftp/"] }) })}
         ${Highlight({ accent: "orange", children: "Política de <strong>titularidade</strong> por objeto; servir arquivos só via API autorizada." })}
       </div>
     </div>`,

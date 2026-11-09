@@ -77,7 +77,7 @@ def export(source, target, table_size=9.0):
                     level=int(name.split()[-1]); style=styles.get('h'+str(level),styles['h3'])
                     if t=='REFERÊNCIAS':
                         story.append(PageBreak())
-                    elif t.startswith('1 '):
+                    elif t.startswith(('1 ', '9 ')):
                         story.append(PageBreak())
                 elif name=='Título central': style=styles['h1']
                 elif name=='Legenda M2': style=styles['caption']

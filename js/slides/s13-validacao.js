@@ -15,7 +15,7 @@ export default () => SlideLayout({
           "Leitura de <strong>cesta alheia</strong> (200) · sem token (401)",
           "Listagem anônima de <strong>/ftp/</strong>; reset com cota 100",
         ] })}
-        ${Highlight({ children: "O próprio motor de desafios marcou <strong>Login Admin, Admin Registration e View Basket</strong> como resolvidos." })}
+        ${Highlight({ children: "Ensaios de <strong>baixo volume</strong>; concorrência e validade temporal por rota não foram medidas." })}
       </div>
       <div style="display:grid;grid-template-rows:1.25fr 1fr;gap:20px;min-height:0">
         ${Figure({ src: "assets/fig_m2_sqli.png", alt: "Sessão de administrador via injeção SQL", shot: true })}
