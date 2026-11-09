@@ -21,5 +21,5 @@ export const JOURNEY = [
   { label: "Conclusão", sub: "Lições aprendidas e próximos passos", accent: "orange", target: 14 },
 ];
 
-/** Slides ocultos na rota curta da cola (derivados dos opcionais em slides/index.js). */
+/** Slides opcionais (reservado; derivável dos `optional` em slides/index.js). */
 export const SHORT_ROUTE_HIDDEN = [];

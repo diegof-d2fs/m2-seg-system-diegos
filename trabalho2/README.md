@@ -1,6 +1,6 @@
 # Modelagem de ameaças no OWASP Juice Shop
 
-Trabalho 2 de Segurança de Sistemas Computacionais, UNIVALI, 2026/2. O relatório editável é distribuído no arquivo M2_Relatorio_Final.docx. Esta pasta pode ser incluída como `trabalho2/` no repositório da M1.
+Trabalho 2 de Segurança de Sistemas Computacionais, UNIVALI, 2026/2. O relatório final está em `relatorio/M2_Relatorio_Final_diego_e_equipe.pdf`. Esta pasta pode ser incluída como `trabalho2/` no repositório da M1.
 
 | Arquivo ou pasta | Conteúdo |
 | --- | --- |
