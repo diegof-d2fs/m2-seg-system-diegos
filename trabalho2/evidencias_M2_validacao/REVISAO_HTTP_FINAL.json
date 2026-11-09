@@ -1,0 +1,243 @@
+{
+  "data": "2026-11-08T20:58:24.718433-03:00",
+  "alvo": "http://127.0.0.1:3000",
+  "versao": "20.2.0",
+  "metodo": "HTTP direto; baixo volume; contas temporárias; sem ensaio de estresse",
+  "verificacoes": [
+    {
+      "verificacao": "Versão da aplicação",
+      "http": 200,
+      "esperado": [
+        200
+      ],
+      "resultado": "conforme",
+      "observacao": "20.2.0"
+    },
+    {
+      "verificacao": "FX1: login administrativo por injeção SQL",
+      "http": 200,
+      "esperado": [
+        200
+      ],
+      "resultado": "conforme",
+      "observacao": "Sessão obtida sem senha válida; token não armazenado no registro."
+    },
+    {
+      "verificacao": "FX1: conteúdo do JWT",
+      "resultado": "observado",
+      "campo_password_presente": true,
+      "campo_exp_presente": false,
+      "papel": "admin",
+      "valores_de_credenciais": "omitidos"
+    },
+    {
+      "verificacao": "FX2: cadastro da conta A",
+      "http": 201,
+      "esperado": [
+        201
+      ],
+      "resultado": "conforme",
+      "observacao": "Papel devolvido: customer"
+    },
+    {
+      "verificacao": "FX1: autenticação da conta A",
+      "http": 200,
+      "esperado": [
+        200
+      ],
+      "resultado": "conforme",
+      "observacao": ""
+    },
+    {
+      "verificacao": "FX2: cadastro da conta B",
+      "http": 201,
+      "esperado": [
+        201
+      ],
+      "resultado": "conforme",
+      "observacao": "Papel devolvido: customer"
+    },
+    {
+      "verificacao": "FX1: autenticação da conta B",
+      "http": 200,
+      "esperado": [
+        200
+      ],
+      "resultado": "conforme",
+      "observacao": ""
+    },
+    {
+      "verificacao": "FX2: cadastro da conta P",
+      "http": 201,
+      "esperado": [
+        201
+      ],
+      "resultado": "conforme",
+      "observacao": "Papel devolvido: admin"
+    },
+    {
+      "verificacao": "FX1: autenticação da conta P",
+      "http": 200,
+      "esperado": [
+        200
+      ],
+      "resultado": "conforme",
+      "observacao": ""
+    },
+    {
+      "verificacao": "FX3: leitura de cesta por titular",
+      "http": 200,
+      "esperado": [
+        200
+      ],
+      "resultado": "conforme",
+      "observacao": "HTTP 200 por outra conta caracteriza ausência de autorização por objeto."
+    },
+    {
+      "verificacao": "FX3: leitura de cesta por outro titular",
+      "http": 200,
+      "esperado": [
+        200
+      ],
+      "resultado": "conforme",
+      "observacao": "HTTP 200 por outra conta caracteriza ausência de autorização por objeto."
+    },
+    {
+      "verificacao": "FX3: leitura de cesta por sem sessão",
+      "http": 401,
+      "esperado": [
+        401
+      ],
+      "resultado": "conforme",
+      "observacao": "HTTP 200 por outra conta caracteriza ausência de autorização por objeto."
+    },
+    {
+      "verificacao": "FX3: consulta autenticada dos itens",
+      "http": 200,
+      "esperado": [
+        200
+      ],
+      "resultado": "conforme",
+      "observacao": ""
+    },
+    {
+      "verificacao": "FX2: associação de resposta em conta de teste",
+      "http": 201,
+      "esperado": [
+        201
+      ],
+      "resultado": "conforme",
+      "observacao": ""
+    },
+    {
+      "verificacao": "FX2: consulta pública da pergunta por e-mail",
+      "http": 200,
+      "esperado": [
+        200
+      ],
+      "resultado": "conforme",
+      "observacao": "Pergunta recebida: True"
+    },
+    {
+      "verificacao": "FX2: reset com resposta incorreta",
+      "http": 401,
+      "esperado": [
+        401
+      ],
+      "resultado": "conforme",
+      "observacao": "Cota declarada: 100"
+    },
+    {
+      "verificacao": "FX2: reset da própria conta com resposta correta",
+      "http": 200,
+      "esperado": [
+        200
+      ],
+      "resultado": "conforme",
+      "observacao": ""
+    },
+    {
+      "verificacao": "FX2: autenticação com a senha redefinida",
+      "http": 200,
+      "esperado": [
+        200
+      ],
+      "resultado": "conforme",
+      "observacao": ""
+    },
+    {
+      "verificacao": "FX3: listagem anônima do diretório HTTP",
+      "http": 200,
+      "esperado": [
+        200
+      ],
+      "resultado": "conforme",
+      "observacao": "Listagem HTML observada: True"
+    },
+    {
+      "verificacao": "FX4: /rest/user/authentication-details por sem sessão",
+      "http": 401,
+      "resultado": "observado",
+      "quantidade_registros": null
+    },
+    {
+      "verificacao": "FX4: /rest/order-history por sem sessão",
+      "http": 500,
+      "resultado": "observado",
+      "quantidade_registros": null
+    },
+    {
+      "verificacao": "FX4: /rest/user/authentication-details por cliente",
+      "http": 200,
+      "resultado": "observado",
+      "quantidade_registros": 35
+    },
+    {
+      "verificacao": "FX4: /rest/order-history por cliente",
+      "http": 200,
+      "resultado": "observado",
+      "quantidade_registros": 0
+    },
+    {
+      "verificacao": "FX4: /rest/user/authentication-details por administrador",
+      "http": 200,
+      "resultado": "observado",
+      "quantidade_registros": 35
+    },
+    {
+      "verificacao": "FX4: /rest/order-history por administrador",
+      "http": 200,
+      "resultado": "observado",
+      "quantidade_registros": 2
+    },
+    {
+      "verificacao": "FX1: três falhas controladas de login",
+      "http": [
+        401,
+        401,
+        401
+      ],
+      "resultado": "observado",
+      "observacao": "Amostra limitada; não mede capacidade, bloqueio global ou abuso distribuído."
+    }
+  ],
+  "limpeza": [
+    {
+      "tipo": "conta temporária P",
+      "http": 401
+    },
+    {
+      "tipo": "conta temporária B",
+      "http": 401
+    },
+    {
+      "tipo": "resposta de segurança de teste",
+      "http": 401
+    },
+    {
+      "tipo": "conta temporária A",
+      "http": 401
+    }
+  ],
+  "limites": "Não foram simulados esgotamento de disco/memória, concorrência, expiração temporal ou revogação em todas as rotas."
+}
