@@ -17,7 +17,6 @@ from reportlab.lib.units import cm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Table, TableStyle, Image, KeepTogether
-from reportlab.platypus.tableofcontents import TableOfContents
 
 
 class ReportPDF(SimpleDocTemplate):
@@ -33,16 +32,17 @@ def export(source, target, table_size=9.0):
     pdfmetrics.registerFontFamily('TNR',normal='TNR',bold='TNR-Bold',italic='TNR-Italic',boldItalic='TNR-BoldItalic')
     d=Document(source)
     styles={
-        'normal':ParagraphStyle('normal',fontName='TNR',fontSize=11,leading=13.2,spaceAfter=4,alignment=TA_JUSTIFY,firstLineIndent=1.0*cm),
-        'question':ParagraphStyle('question',fontName='TNR',fontSize=10,leading=11.2,spaceAfter=3,alignment=TA_JUSTIFY),
-        'caption':ParagraphStyle('caption',fontName='TNR',fontSize=10,leading=11.5,spaceBefore=5,spaceAfter=4,keepWithNext=True),
-        'source':ParagraphStyle('source',fontName='TNR',fontSize=9,leading=10.2,spaceAfter=5),
-        'reference':ParagraphStyle('reference',fontName='TNR',fontSize=9.5,leading=10.5,spaceAfter=5,splitLongWords=True),
-        'cell':ParagraphStyle('cell',fontName='TNR',fontSize=table_size,leading=table_size+1,spaceAfter=0,splitLongWords=True),
+        'normal':ParagraphStyle('normal',fontName='TNR',fontSize=12,leading=18,spaceAfter=4,alignment=TA_JUSTIFY,firstLineIndent=1.25*cm),
+        'question':ParagraphStyle('question',fontName='TNR',fontSize=12,leading=18,spaceAfter=4,alignment=TA_JUSTIFY,splitLongWords=True),
+        'caption':ParagraphStyle('caption',fontName='TNR',fontSize=12,leading=18,spaceBefore=6,spaceAfter=4,keepWithNext=True),
+        'source':ParagraphStyle('source',fontName='TNR',fontSize=12,leading=18,spaceAfter=6),
+        # Referências em espaço simples e separadas entre si, como prevê a ABNT.
+        'reference':ParagraphStyle('reference',fontName='TNR',fontSize=12,leading=12,spaceAfter=12,splitLongWords=True),
+        'cell':ParagraphStyle('cell',fontName='TNR',fontSize=12,leading=18,spaceAfter=0,splitLongWords=True),
     }
-    for level,size in [(1,14),(2,12),(3,11),(4,10)]:
-        styles['h'+str(level)]=ParagraphStyle('h'+str(level),fontName='TNR-Bold',fontSize=size,leading=size+2,spaceBefore=10,spaceAfter=6,keepWithNext=True)
-    center=ParagraphStyle('center',fontName='TNR',fontSize=14,leading=18,alignment=TA_CENTER)
+    for level,size in [(1,12),(2,12),(3,12),(4,12)]:
+        styles['h'+str(level)]=ParagraphStyle('h'+str(level),fontName='TNR-Bold',fontSize=size,leading=18,spaceBefore=10,spaceAfter=6,keepWithNext=True)
+    center=ParagraphStyle('center',fontName='TNR',fontSize=12,leading=18,alignment=TA_CENTER)
     story=[]
     cover=['UNIVERSIDADE DO VALE DO ITAJAÍ','ESCOLA POLITÉCNICA','CURSO DE CIÊNCIA DA COMPUTAÇÃO','Segurança de Sistemas Computacionais',
       'Diego Fonseca da Silva','Leonardo Pacheco B Dias','Gustavo Gonçalves Trindade','João Victor Rodrigues Santos',
@@ -53,7 +53,15 @@ def export(source, target, table_size=9.0):
     story.append(PageBreak())
     active=False
     def text(p):
-        return escape(p.text).replace('\n','<br/>')
+        # Preserva negrito dos identificadores das respostas também no PDF.
+        parts=[]
+        for run in p.runs:
+            value=escape(run.text).replace('\n','<br/>')
+            if run.bold: value='<b>'+value+'</b>'
+            if run.italic: value='<i>'+value+'</i>'
+            if run.underline: value='<u>'+value+'</u>'
+            parts.append(value)
+        return ''.join(parts) if parts else escape(p.text).replace('\n','<br/>')
     for el in d.element.body:
         if el.tag==qn('w:p'):
             p=WordParagraph(el,d)
@@ -62,17 +70,14 @@ def export(source, target, table_size=9.0):
             t=p.text.strip()
             if t=='SUMÁRIO':
                 story.extend([PageBreak(),Paragraph('SUMÁRIO',styles['h1'])])
-                toc=TableOfContents()
-                toc.levelStyles=[ParagraphStyle('toc0',fontName='TNR',fontSize=10.5,leading=14,spaceBefore=2),
-                                 ParagraphStyle('toc1',fontName='TNR',fontSize=10,leading=13,leftIndent=12)]
-                story.append(toc)
-                story.append(PageBreak())
                 continue
             if t:
                 name=p.style.name
                 if name.startswith('Heading '):
                     level=int(name.split()[-1]); style=styles.get('h'+str(level),styles['h3'])
                     if t=='REFERÊNCIAS':
+                        story.append(PageBreak())
+                    elif t.startswith('1 '):
                         story.append(PageBreak())
                 elif name=='Título central': style=styles['h1']
                 elif name=='Legenda M2': style=styles['caption']
@@ -88,7 +93,7 @@ def export(source, target, table_size=9.0):
                 from io import BytesIO
                 blob=d.part.related_parts[blip.get(qn('r:embed'))].blob
                 pic=Image(BytesIO(blob))
-                max_w=16*cm; max_h=6.5*cm
+                max_w=16*cm; max_h=18.5*cm
                 factor=min(max_w/pic.imageWidth,max_h/pic.imageHeight)
                 pic.drawWidth=pic.imageWidth*factor; pic.drawHeight=pic.imageHeight*factor
                 pic.hAlign='CENTER'
@@ -112,20 +117,25 @@ def export(source, target, table_size=9.0):
                 ('TOPPADDING',(0,0),(-1,-1),1.5),('BOTTOMPADDING',(0,0),(-1,-1),1.5)]))
             story.append(table)
     def footer(canvas,doc):
-        canvas.setFont('TNR',9);canvas.drawRightString(19*cm,1.2*cm,str(doc.page))
+        canvas.setFont('TNR',12);canvas.drawRightString(19*cm,1.2*cm,str(doc.page))
     doc=ReportPDF(str(target),pagesize=A4,leftMargin=3*cm,rightMargin=2*cm,topMargin=2*cm,bottomMargin=1.6*cm,
         title='Modelagem de ameaças no OWASP Juice Shop',author='Diego Fonseca da Silva e equipe')
     doc.heading_pages={}
     doc.multiBuild(story,onFirstPage=footer,onLaterPages=footer)
-    # Preenche o sumário visível do Word com a paginação do PDF entregue.
-    anchor=next(p for p in d.paragraphs if p.text=='SUMÁRIO')
+    # Atualiza a pagina????o dos itens est??ticos do sum??rio no DOCX. Rode
+    # novamente para refletir os n??meros atualizados tamb??m no PDF final.
+    anchor=next(p for p in d.paragraphs if p.text.startswith('SUM'))
     toc_xml=anchor._p.getnext()
     if toc_xml is not None and toc_xml.xpath('.//w:instrText'):
-        for heading,page in doc.heading_pages.items():
-            p=WordParagraph(toc_xml,d).insert_paragraph_before(heading+'\t'+str(page),style='Índice M2')
-            p.paragraph_format.line_spacing=Pt(13)
         toc_xml.getparent().remove(toc_xml)
-        d.save(source)
+    for p in d.paragraphs:
+        style_id=p.style.style_id.lower().encode('ascii','ignore').decode('ascii')
+        if style_id.startswith('ndice'):
+            heading=p.text.rsplit('\t',1)[0].strip()
+            if heading in doc.heading_pages:
+                p.text=heading+'\t'+str(doc.heading_pages[heading])
+            p.paragraph_format.line_spacing=1.5
+    d.save(source)
 
 
 if __name__=='__main__':
