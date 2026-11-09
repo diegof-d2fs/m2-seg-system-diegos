@@ -3,11 +3,11 @@ import { Bullets, Highlight, Figure, Source } from "../kit.js";
 
 export default () => SlideLayout({
   kicker: "Validação · reprodução em laboratório",
-  title: "Do papel para a instância, em 08/11/2026",
+  title: "Do papel para a instância",
   content: `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:36px;height:100%">
       <div class="apm-stack-26" style="justify-content:center">
-        ${Source({ children: "Mesma imagem v20.2.0 (digest sha256:8739…526b) em 127.0.0.1:3000" })}
+        ${Source({ children: "Reprodução em 08/11/2026 · mesma imagem v20.2.0 (digest sha256:8739…526b) em 127.0.0.1:3000" })}
         ${Bullets({ size: 25, items: [
           "<strong>Injeção SQL</strong> no login → sessão admin (id 1)",
           "JWT com <code>password</code> (MD5), sem <code>exp</code>",
