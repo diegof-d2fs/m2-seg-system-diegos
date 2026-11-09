@@ -1,0 +1,26 @@
+﻿Ordem;ID;Fluxo;STRIDE;Título;Média;Risco;Status;Decisão
+1;T-FX1-02;FX1;T;Injeção SQL na autenticação;9,8;Alto;Confirmada no T1;Mitigar
+2;T-FX2-06;FX2;E;Atribuição de papel privilegiado no cadastro;9,0;Alto;Plausível;Mitigar
+3;T-FX2-01;FX2;S;Tomada de conta por resposta previsível;8,8;Alto;Confirmada no T1;Mitigar
+4;T-FX1-04;FX1;I;Hash de senha no JWT;8,6;Alto;Confirmada no T1;Mitigar
+5;T-FX4-04;FX4;I;Consulta de usuários por conta comum;8,6;Alto;Plausível;Mitigar
+6;T-FX3-06;FX3;E;Leitura da cesta de outro titular;8,4;Alto;Confirmada no T1;Mitigar
+7;T-FX1-06;FX1;E;Chave de assinatura distribuída;8,4;Alto;Plausível;Mitigar
+8;T-FX4-06;FX4;E;Exclusão de feedback por conta sem papel administrativo;8,2;Alto;Plausível;Mitigar
+9;T-FX1-01;FX1;S;Tentativas repetidas no login;8,0;Alto;Confirmada no T1;Mitigar
+10;T-FX3-02;FX3;T;Checkout de cesta alheia ou referências indevidas;7,8;Alto;Plausível;Mitigar
+11;T-FX2-04;FX2;I;Divulgação da pergunta vinculada ao e-mail;7,6;Alto;Confirmada no T1;Mitigar
+12;T-FX3-07;FX3;I;Exposição de comprovante pelo diretório HTTP;7,6;Alto;Plausível;Mitigar
+13;T-FX3-04;FX3;I;Erro de autorização com detalhes internos;7,2;Alto;Confirmada no T1;Mitigar
+14;T-FX4-02;FX4;T;Atualização de entrega baseada em estado do cliente;7,2;Alto;Plausível;Mitigar
+15;T-FX3-01;FX3;S;Reutilização de sessão de comprador;7,0;Alto;Plausível;Mitigar
+16;T-FX4-01;FX4;S;Reuso de sessão contábil após desligamento;7,0;Alto;Plausível;Mitigar
+17;T-FX3-05;FX3;D;Saturação por geração de comprovantes;7,0;Alto;Plausível;Mitigar
+18;T-FX2-05;FX2;D;Consumo de recursos por cadastros automatizados;7,0;Alto;Plausível;Mitigar
+19;T-FX1-05;FX1;D;Exaustão de sessões e autenticação;6,8;Médio;Plausível;Mitigar
+20;T-FX4-03;FX4;R;Repúdio de moderação e entrega;6,8;Médio;Plausível;Mitigar
+21;T-FX4-05;FX4;D;Listagem administrativa sem limite de volume;6,8;Médio;Plausível;Mitigar
+22;T-FX2-02;FX2;T;Associação indevida de resposta de segurança;6,6;Médio;Plausível;Mitigar
+23;T-FX2-03;FX2;R;Contestação de redefinição de senha;6,6;Médio;Plausível;Mitigar
+24;T-FX3-03;FX3;R;Contestação de pedido sem correlação de eventos;6,4;Médio;Plausível;Mitigar
+25;T-FX1-03;FX1;R;Atribuição incompleta de logins;6,4;Médio;Plausível;Mitigar

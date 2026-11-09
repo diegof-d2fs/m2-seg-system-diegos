@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="557" viewBox="0 0 1020 557">
+<title>DFD nível 0</title>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#263542"/></marker></defs>
+<rect x="0" y="0" width="1020" height="557" fill="white"/>
+<rect x="583" y="65" width="421" height="415" fill="none" stroke="#655c6f" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="591" y="58" text-anchor="start" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">TB-01  Interface externa da solução</text>
+<rect x="640" y="92" width="300" height="375" rx="12" fill="#e9eef1" stroke="#556575" stroke-width="2"/>
+<text x="790.0" y="274.85" text-anchor="middle" font-family="Arial, sans-serif" font-size="21" font-weight="bold" fill="#263542">P0</text>
+<text x="790.0" y="298.85" text-anchor="middle" font-family="Arial, sans-serif" font-size="21" font-weight="bold" fill="#263542">OWASP Juice Shop</text>
+<rect x="28" y="112" width="185" height="67" rx="0" fill="#ffffff" stroke="#556575" stroke-width="2"/>
+<text x="120.5" y="141.3" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">E1</text>
+<text x="120.5" y="162.3" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">Visitante</text>
+<path d="M213 137 H640" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="426.5" y="130" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F01  Credenciais, cadastro e recuperação</text>
+<path d="M640 165 H213" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="426.5" y="158" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F02  Sessão, respostas e conteúdo público</text>
+<rect x="28" y="210" width="185" height="67" rx="0" fill="#ffffff" stroke="#556575" stroke-width="2"/>
+<text x="120.5" y="239.3" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">E2</text>
+<text x="120.5" y="260.3" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">Cliente</text>
+<path d="M213 235 H640" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="426.5" y="228" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F03  Sessão, cesta e dados de compra</text>
+<path d="M640 263 H213" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="426.5" y="256" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F04  Perfil, pedido e comprovante</text>
+<rect x="28" y="308" width="185" height="67" rx="0" fill="#ffffff" stroke="#556575" stroke-width="2"/>
+<text x="120.5" y="337.3" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">E3</text>
+<text x="120.5" y="358.3" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">Administrador</text>
+<path d="M213 333 H640" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="426.5" y="326" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F05  Consulta de contas e moderação</text>
+<path d="M640 361 H213" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="426.5" y="354" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F06  Listas e resultado da moderação</text>
+<rect x="28" y="406" width="185" height="67" rx="0" fill="#ffffff" stroke="#556575" stroke-width="2"/>
+<text x="120.5" y="435.3" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">E4</text>
+<text x="120.5" y="456.3" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">Contabilidade</text>
+<path d="M213 431 H640" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="426.5" y="424" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F07  Consulta de pedidos e entrega</text>
+<path d="M640 459 H213" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="426.5" y="452" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F08  Pedidos e situação da entrega</text>
+<text x="32" y="54" text-anchor="start" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">Entidades externas</text>
+<text x="31" y="529" text-anchor="start" font-family="Arial, sans-serif" font-size="17" font-weight="normal" fill="#263542">P0 agrega a interface e os serviços da loja. As setas representam dados em cada sentido.</text>
+</svg>

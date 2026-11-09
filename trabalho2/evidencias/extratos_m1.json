@@ -1,0 +1,183 @@
+{
+  "jwt": [
+    {
+      "achado": "V1",
+      "arquivo": "01",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/login",
+      "resposta": "HTTP 200 OK",
+      "alg": "RS256",
+      "claims": [
+        "data",
+        "bid",
+        "iat"
+      ],
+      "password_presente": true
+    },
+    {
+      "achado": "V2",
+      "arquivo": "02",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/login",
+      "resposta": "HTTP 200 OK",
+      "alg": "RS256",
+      "claims": [
+        "data",
+        "bid",
+        "iat"
+      ],
+      "password_presente": true
+    }
+  ],
+  "login": [
+    {
+      "arquivo": "02",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/login",
+      "resposta": "HTTP 401 Unauthorized"
+    },
+    {
+      "arquivo": "03",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/login",
+      "resposta": "HTTP 401 Unauthorized"
+    },
+    {
+      "arquivo": "04",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/login",
+      "resposta": "HTTP 401 Unauthorized"
+    },
+    {
+      "arquivo": "05",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/login",
+      "resposta": "HTTP 401 Unauthorized"
+    },
+    {
+      "arquivo": "06",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/login",
+      "resposta": "HTTP 401 Unauthorized"
+    },
+    {
+      "arquivo": "07",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/login",
+      "resposta": "HTTP 401 Unauthorized"
+    },
+    {
+      "arquivo": "08",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/login",
+      "resposta": "HTTP 401 Unauthorized"
+    },
+    {
+      "arquivo": "09",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/login",
+      "resposta": "HTTP 401 Unauthorized"
+    },
+    {
+      "arquivo": "10",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/login",
+      "resposta": "HTTP 401 Unauthorized"
+    },
+    {
+      "arquivo": "11",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/login",
+      "resposta": "HTTP 401 Unauthorized"
+    },
+    {
+      "arquivo": "12",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/login",
+      "resposta": "HTTP 401 Unauthorized"
+    },
+    {
+      "arquivo": "13",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/login",
+      "resposta": "HTTP 401 Unauthorized"
+    },
+    {
+      "arquivo": "14",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/login",
+      "resposta": "HTTP 401 Unauthorized"
+    },
+    {
+      "arquivo": "15",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/login",
+      "resposta": "HTTP 401 Unauthorized"
+    },
+    {
+      "arquivo": "16",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/login",
+      "resposta": "HTTP 401 Unauthorized"
+    },
+    {
+      "arquivo": "17",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/login",
+      "resposta": "HTTP 200 OK"
+    }
+  ],
+  "reset": [
+    {
+      "arquivo": "01",
+      "requisicao": "POST http://127.0.0.1:3000/api/Users",
+      "resposta": "HTTP 201 Created"
+    },
+    {
+      "arquivo": "02",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/login",
+      "resposta": "HTTP 200 OK"
+    },
+    {
+      "arquivo": "03",
+      "requisicao": "POST http://127.0.0.1:3000/api/SecurityAnswers/",
+      "resposta": "HTTP 201 Created"
+    },
+    {
+      "arquivo": "04",
+      "requisicao": "GET http://127.0.0.1:3000/rest/user/security-question?email=[omitido]",
+      "resposta": "HTTP 200 OK"
+    },
+    {
+      "arquivo": "05",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/reset-password",
+      "resposta": "HTTP 401 Unauthorized",
+      "X-RateLimit-Limit": "100",
+      "X-RateLimit-Remaining": "99"
+    },
+    {
+      "arquivo": "06",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/reset-password",
+      "resposta": "HTTP 401 Unauthorized",
+      "X-RateLimit-Limit": "100",
+      "X-RateLimit-Remaining": "98"
+    },
+    {
+      "arquivo": "07",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/reset-password",
+      "resposta": "HTTP 401 Unauthorized",
+      "X-RateLimit-Limit": "100",
+      "X-RateLimit-Remaining": "97"
+    },
+    {
+      "arquivo": "08",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/reset-password",
+      "resposta": "HTTP 401 Unauthorized",
+      "X-RateLimit-Limit": "100",
+      "X-RateLimit-Remaining": "96"
+    },
+    {
+      "arquivo": "09",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/reset-password",
+      "resposta": "HTTP 200 OK",
+      "X-RateLimit-Limit": "100",
+      "X-RateLimit-Remaining": "95"
+    },
+    {
+      "arquivo": "10",
+      "requisicao": "POST http://127.0.0.1:3000/rest/user/login",
+      "resposta": "HTTP 200 OK"
+    }
+  ],
+  "reset_expoe_hash": true,
+  "cesta": {
+    "arquivo": "06",
+    "requisicao": "GET http://127.0.0.1:3000/rest/basket/22",
+    "resposta": "HTTP 200 OK",
+    "cesta_conta_a": 22,
+    "cesta_conta_b": 23,
+    "cesta_lida": 22
+  }
+}

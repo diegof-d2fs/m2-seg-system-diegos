@@ -1,0 +1,5 @@
+# nada de build; nada de node
+node_modules/
+.DS_Store
+Thumbs.db
+*.tmp

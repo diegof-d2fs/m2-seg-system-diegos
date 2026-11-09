@@ -1,0 +1,205 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="1071" viewBox="0 0 1020 1071">
+<title>DFD nível 1</title>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#263542"/></marker></defs>
+<rect x="0" y="0" width="1020" height="1071" fill="white"/>
+<rect x="395" y="55" width="614" height="935" fill="none" stroke="#655c6f" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="403" y="48" text-anchor="start" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">TB-02  Contêiner Docker / labnet</text>
+<rect x="827" y="55" width="176" height="935" fill="none" stroke="#655c6f" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="835" y="48" text-anchor="start" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">TB-03  Dados</text>
+<rect x="371" y="55" width="17" height="935" fill="none" stroke="#655c6f" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="337" y="48" text-anchor="start" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">TB-01</text>
+<rect x="213" y="65" width="143" height="915" rx="12" fill="#e9eef1" stroke="#556575" stroke-width="2"/>
+<text x="284.5" y="507.8" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">P1</text>
+<text x="284.5" y="528.8" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">Interface da</text>
+<text x="284.5" y="549.8" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">loja</text>
+<rect x="14" y="65" width="151" height="62" rx="0" fill="#ffffff" stroke="#556575" stroke-width="2"/>
+<text x="89.5" y="91.8" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">E1</text>
+<text x="89.5" y="112.8" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">Visitante</text>
+<path d="M165 88 H213" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="189.0" y="83" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F01</text>
+<path d="M213 114 H165" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="189.0" y="109" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F02</text>
+<rect x="14" y="136" width="151" height="62" rx="0" fill="#ffffff" stroke="#556575" stroke-width="2"/>
+<text x="89.5" y="162.8" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">E2</text>
+<text x="89.5" y="183.8" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">Cliente</text>
+<path d="M165 159 H213" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="189.0" y="154" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F03</text>
+<path d="M213 185 H165" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="189.0" y="180" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F04</text>
+<rect x="14" y="207" width="151" height="62" rx="0" fill="#ffffff" stroke="#556575" stroke-width="2"/>
+<text x="89.5" y="233.8" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">E3</text>
+<text x="89.5" y="254.8" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">Administrador</text>
+<path d="M165 230 H213" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="189.0" y="225" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F05</text>
+<path d="M213 256 H165" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="189.0" y="251" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F06</text>
+<rect x="14" y="278" width="151" height="62" rx="0" fill="#ffffff" stroke="#556575" stroke-width="2"/>
+<text x="89.5" y="304.8" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">E4</text>
+<text x="89.5" y="325.8" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">Contabilidade</text>
+<path d="M165 301 H213" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="189.0" y="296" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F07</text>
+<path d="M213 327 H165" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="189.0" y="322" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F08</text>
+<rect x="14" y="349" width="151" height="58" fill="#f5f5f5"/>
+<path d="M14 349 h151 M14 407 h151" stroke="#556575" stroke-width="2"/>
+<text x="89.5" y="364.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">D0</text>
+<text x="89.5" y="383.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">Estado no</text>
+<text x="89.5" y="402.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">navegador</text>
+<path d="M213 370 H165" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="189.0" y="365" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F19</text>
+<path d="M165 395 H213" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="189.0" y="390" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F20</text>
+<rect x="512" y="65" width="160" height="165" rx="12" fill="#e9eef1" stroke="#556575" stroke-width="2"/>
+<text x="592.0" y="132.8" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">P2</text>
+<text x="592.0" y="153.8" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">Identidade e</text>
+<text x="592.0" y="174.8" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">sessão</text>
+<path d="M356 133.5 H512" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="434.0" y="128.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F09  Credenciais</text>
+<path d="M512 163.5 H356" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="434.0" y="158.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F10  Sessão e perfil</text>
+<rect x="845" y="67" width="145" height="53" fill="#f5f5f5"/>
+<path d="M845 67 h145 M845 120 h145" stroke="#556575" stroke-width="2"/>
+<text x="917.5" y="89.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">D1</text>
+<text x="917.5" y="108.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">SQLite</text>
+<path d="M672 84 H845" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="80" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F21  Conta e cesta</text>
+<path d="M845 112 H672" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="108" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F22  Perfil e ID</text>
+<rect x="845" y="124" width="145" height="53" fill="#f5f5f5"/>
+<path d="M845 124 h145 M845 177 h145" stroke="#556575" stroke-width="2"/>
+<text x="917.5" y="146.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">D2</text>
+<text x="917.5" y="165.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">Mapa de sessões</text>
+<path d="M672 141 H845" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="137" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F23  Grava ou lê JWT</text>
+<path d="M845 169 H672" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F24  Perfil e cesta</text>
+<rect x="845" y="181" width="145" height="47" fill="#f5f5f5"/>
+<path d="M845 181 h145 M845 228 h145" stroke="#556575" stroke-width="2"/>
+<text x="917.5" y="200.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">D5</text>
+<text x="917.5" y="219.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">Logs de acesso</text>
+<path d="M672 208 H845" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="204" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F41  Log do login</text>
+<rect x="512" y="248" width="160" height="108" rx="12" fill="#e9eef1" stroke="#556575" stroke-width="2"/>
+<text x="592.0" y="287.3" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">P3</text>
+<text x="592.0" y="308.3" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">Cadastro e</text>
+<text x="592.0" y="329.3" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">recuperação</text>
+<path d="M356 288.0 H512" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="434.0" y="283.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F11  Cadastro e reset</text>
+<path d="M512 318.0 H356" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="434.0" y="313.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F12  Confirmação</text>
+<rect x="845" y="250" width="145" height="53" fill="#f5f5f5"/>
+<path d="M845 250 h145 M845 303 h145" stroke="#556575" stroke-width="2"/>
+<text x="917.5" y="272.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">D1</text>
+<text x="917.5" y="291.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">SQLite</text>
+<path d="M672 267 H845" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="263" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F25  Cadastro e reset</text>
+<path d="M845 295 H672" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="291" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F26  Dados e resultado</text>
+<rect x="845" y="307" width="145" height="47" fill="#f5f5f5"/>
+<path d="M845 307 h145 M845 354 h145" stroke="#556575" stroke-width="2"/>
+<text x="917.5" y="326.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">D5</text>
+<text x="917.5" y="345.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">Logs de acesso</text>
+<path d="M672 334 H845" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="330" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F42  Log do reset</text>
+<rect x="512" y="374" width="160" height="279" rx="12" fill="#e9eef1" stroke="#556575" stroke-width="2"/>
+<text x="592.0" y="498.8" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">P4</text>
+<text x="592.0" y="519.8" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">Cesta e</text>
+<text x="592.0" y="540.8" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">pedido</text>
+<path d="M356 499.5 H512" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="434.0" y="494.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F13  Itens e pedido</text>
+<path d="M512 529.5 H356" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="434.0" y="524.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F14  Cesta e pedido</text>
+<rect x="845" y="376" width="145" height="53" fill="#f5f5f5"/>
+<path d="M845 376 h145 M845 429 h145" stroke="#556575" stroke-width="2"/>
+<text x="917.5" y="398.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">D1</text>
+<text x="917.5" y="417.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">SQLite</text>
+<path d="M672 393 H845" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="389" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F27  Cesta e checkout</text>
+<path d="M845 421 H672" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="417" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F28  Dados e gravações</text>
+<rect x="845" y="433" width="145" height="53" fill="#f5f5f5"/>
+<path d="M845 433 h145 M845 486 h145" stroke="#556575" stroke-width="2"/>
+<text x="917.5" y="455.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">D2</text>
+<text x="917.5" y="474.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">Mapa de sessões</text>
+<path d="M672 450 H845" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="446" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F33  Consulta de sessão</text>
+<path d="M845 478 H672" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="474" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F34  Titular e cesta</text>
+<rect x="845" y="490" width="145" height="53" fill="#f5f5f5"/>
+<path d="M845 490 h145 M845 543 h145" stroke="#556575" stroke-width="2"/>
+<text x="917.5" y="512.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">D3</text>
+<text x="917.5" y="531.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">Pedidos</text>
+<path d="M672 507 H845" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="503" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F29  Pedido e histórico</text>
+<path d="M845 535 H672" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="531" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F30  Pedido ou confirmação</text>
+<rect x="845" y="547" width="145" height="53" fill="#f5f5f5"/>
+<path d="M845 547 h145 M845 600 h145" stroke="#556575" stroke-width="2"/>
+<text x="917.5" y="569.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">D4</text>
+<text x="917.5" y="588.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">Diretório ftp/</text>
+<path d="M672 564 H845" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="560" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F37  Grava o PDF</text>
+<path d="M845 592 H672" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="588" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F38  Conclusão ou erro</text>
+<rect x="845" y="604" width="145" height="47" fill="#f5f5f5"/>
+<path d="M845 604 h145 M845 651 h145" stroke="#556575" stroke-width="2"/>
+<text x="917.5" y="623.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">D5</text>
+<text x="917.5" y="642.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">Logs de acesso</text>
+<path d="M672 631 H845" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="627" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F43  Log da compra</text>
+<rect x="512" y="671" width="160" height="222" rx="12" fill="#e9eef1" stroke="#556575" stroke-width="2"/>
+<text x="592.0" y="767.3" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">P5</text>
+<text x="592.0" y="788.3" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">Funções</text>
+<text x="592.0" y="809.3" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">privilegiadas</text>
+<path d="M356 768.0 H512" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="434.0" y="763.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F15  JWT e ação</text>
+<path d="M512 798.0 H356" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="434.0" y="793.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F16  Listas e status</text>
+<rect x="845" y="673" width="145" height="53" fill="#f5f5f5"/>
+<path d="M845 673 h145 M845 726 h145" stroke="#556575" stroke-width="2"/>
+<text x="917.5" y="695.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">D1</text>
+<text x="917.5" y="714.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">SQLite</text>
+<path d="M672 690 H845" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="686" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F31  Consulta e modera</text>
+<path d="M845 718 H672" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="714" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F32  Contas e feedback</text>
+<rect x="845" y="730" width="145" height="53" fill="#f5f5f5"/>
+<path d="M845 730 h145 M845 783 h145" stroke="#556575" stroke-width="2"/>
+<text x="917.5" y="752.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">D2</text>
+<text x="917.5" y="771.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">Mapa de sessões</text>
+<path d="M672 747 H845" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="743" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F45  Token por conta</text>
+<path d="M845 775 H672" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="771" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F46  Ref. de sessão</text>
+<rect x="845" y="787" width="145" height="53" fill="#f5f5f5"/>
+<path d="M845 787 h145 M845 840 h145" stroke="#556575" stroke-width="2"/>
+<text x="917.5" y="809.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">D3</text>
+<text x="917.5" y="828.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">Pedidos</text>
+<path d="M672 804 H845" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="800" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F35  Lista e atualiza</text>
+<path d="M845 832 H672" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="828" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F36  Pedidos e retorno</text>
+<rect x="845" y="844" width="145" height="47" fill="#f5f5f5"/>
+<path d="M845 844 h145 M845 891 h145" stroke="#556575" stroke-width="2"/>
+<text x="917.5" y="863.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">D5</text>
+<text x="917.5" y="882.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">Logs de acesso</text>
+<path d="M672 871 H845" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="867" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F44  Log administrativo</text>
+<rect x="512" y="911" width="160" height="69" rx="12" fill="#e9eef1" stroke="#556575" stroke-width="2"/>
+<text x="592.0" y="941.3" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">P6</text>
+<text x="592.0" y="962.3" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#263542">Arquivos HTTP</text>
+<path d="M356 931.5 H512" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="434.0" y="926.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F17  Nome de arquivo</text>
+<path d="M512 961.5 H356" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="434.0" y="956.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F18  Índice ou PDF</text>
+<rect x="845" y="913" width="145" height="53" fill="#f5f5f5"/>
+<path d="M845 913 h145 M845 966 h145" stroke="#556575" stroke-width="2"/>
+<text x="917.5" y="935.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">D4</text>
+<text x="917.5" y="954.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#263542">Diretório ftp/</text>
+<path d="M672 930 H845" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="926" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F39  Lista ou lê arquivo</text>
+<path d="M845 958 H672" fill="none" stroke="#263542" stroke-width="1.55" marker-end="url(#a)"/>
+<text x="758.5" y="954" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#263542" style="paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;">F40  Índice ou arquivo</text>
+<text x="20" y="1016" text-anchor="start" font-family="Arial, sans-serif" font-size="16" font-weight="normal" fill="#263542">TB-01 separa cliente e servidor. TB-02 delimita a implantação. TB-03 indica a passagem lógica aos dados.</text>
+<text x="20" y="1044" text-anchor="start" font-family="Arial, sans-serif" font-size="16" font-weight="normal" fill="#263542">IDs repetidos de armazenamento representam o mesmo recurso. O inventário detalha dados e protocolos.</text>
+</svg>

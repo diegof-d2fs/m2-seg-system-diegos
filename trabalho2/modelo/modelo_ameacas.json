@@ -1,0 +1,3937 @@
+{
+  "titulo": "Modelagem de ameaças no OWASP Juice Shop",
+  "versao_juice_shop": "20.2.0",
+  "commit_juice_shop": "5658473cf8814459bf89000ce373b20ed0b4eb37",
+  "commit_m1": "ce48201e0fac66b81b7abd8e6face308306f9387",
+  "imagem_m1": "bkimminich/juice-shop:v20.2.0",
+  "digest_m1": "sha256:8739101ade29358abb5469ee66ae78e582c97ed0a5543a4ad102e5fa5193526b",
+  "elementos": [
+    {
+      "id": "P0",
+      "tipo": "Processo",
+      "nome": "OWASP Juice Shop",
+      "descricao": "Aplicação de loja fictícia vista como processo único no nível 0.",
+      "tecnologia": "Angular e Node.js/Express"
+    },
+    {
+      "id": "E1",
+      "tipo": "Entidade externa",
+      "nome": "Visitante",
+      "descricao": "Pessoa sem sessão. Inicia cadastro, recuperação e login, e consulta conteúdo público.",
+      "tecnologia": "Navegador ou cliente HTTP"
+    },
+    {
+      "id": "E2",
+      "tipo": "Entidade externa",
+      "nome": "Cliente",
+      "descricao": "Titular de conta customer ou deluxe com sessão. Opera a própria cesta e compra.",
+      "tecnologia": "Navegador ou cliente HTTP"
+    },
+    {
+      "id": "E3",
+      "tipo": "Entidade externa",
+      "nome": "Administrador",
+      "descricao": "Papel admin previsto para consulta de contas e moderação de feedbacks.",
+      "tecnologia": "Navegador ou cliente HTTP"
+    },
+    {
+      "id": "E4",
+      "tipo": "Entidade externa",
+      "nome": "Contabilidade",
+      "descricao": "Papel accounting previsto para consultar pedidos e modificar o estado de entrega.",
+      "tecnologia": "Navegador ou cliente HTTP"
+    },
+    {
+      "id": "P1",
+      "tipo": "Processo",
+      "nome": "Interface da loja",
+      "descricao": "Executa no navegador, monta requisições e apresenta respostas. Chamadas diretas podem substituir a SPA.",
+      "tecnologia": "Angular 22 e cliente HTTP"
+    },
+    {
+      "id": "P2",
+      "tipo": "Processo",
+      "nome": "Identidade e sessão",
+      "descricao": "Consulta conta e cesta, emite JWT e recupera a identidade da sessão.",
+      "tecnologia": "Express, Sequelize, jsonwebtoken"
+    },
+    {
+      "id": "P3",
+      "tipo": "Processo",
+      "nome": "Cadastro e recuperação",
+      "descricao": "Cria conta, associa pergunta e resposta de segurança e troca a senha.",
+      "tecnologia": "Express, finale-rest, Sequelize"
+    },
+    {
+      "id": "P4",
+      "tipo": "Processo",
+      "nome": "Cesta e pedido",
+      "descricao": "Administra itens, endereços e cartões fictícios, calcula pedido e gera comprovante.",
+      "tecnologia": "Express, Sequelize, MarsDB, PDFKit"
+    },
+    {
+      "id": "P5",
+      "tipo": "Processo",
+      "nome": "Funções privilegiadas",
+      "descricao": "Executa operações administrativas e de contabilidade, com guardas diferentes por rota.",
+      "tecnologia": "Express, finale-rest, MarsDB"
+    },
+    {
+      "id": "P6",
+      "tipo": "Processo",
+      "nome": "Arquivos HTTP",
+      "descricao": "Lista e entrega arquivos de ftp/, inclusive comprovantes quando presentes.",
+      "tecnologia": "serve-index, Express sendFile"
+    },
+    {
+      "id": "D0",
+      "tipo": "Armazenamento",
+      "nome": "Estado no navegador",
+      "descricao": "Mantém token no localStorage e em cookie, além do ID de cesta no sessionStorage.",
+      "tecnologia": "Web Storage e cookie"
+    },
+    {
+      "id": "D1",
+      "tipo": "Armazenamento",
+      "nome": "SQLite",
+      "descricao": "Guarda contas, respostas de segurança, cestas, endereços, cartões, estoque e feedbacks.",
+      "tecnologia": "SQLite, arquivo data/juiceshop.sqlite"
+    },
+    {
+      "id": "D2",
+      "tipo": "Armazenamento",
+      "nome": "Mapa de sessões",
+      "descricao": "Associa JWT, perfil autenticado e identificador de cesta. Também pode ser repovoado por middleware.",
+      "tecnologia": "Mapa autenticado em memória Node.js"
+    },
+    {
+      "id": "D3",
+      "tipo": "Armazenamento",
+      "nome": "Pedidos",
+      "descricao": "Guarda coleção de pedidos e estado de entrega em memória.",
+      "tecnologia": "MarsDB, coleção orders"
+    },
+    {
+      "id": "D4",
+      "tipo": "Armazenamento",
+      "nome": "Diretório ftp/",
+      "descricao": "Contém documentos de exemplo e PDFs gravados no checkout.",
+      "tecnologia": "Sistema de arquivos do contêiner"
+    },
+    {
+      "id": "D5",
+      "tipo": "Armazenamento",
+      "nome": "Logs de acesso",
+      "descricao": "Recebe registros HTTP em formato combined com rotação diária e retenção configurada de dois dias.",
+      "tecnologia": "Morgan, file-stream-rotator, logs/access.log.*"
+    }
+  ],
+  "fronteiras": [
+    {
+      "id": "TB-01",
+      "separa": "Cliente | servidor",
+      "interpretacao": "Os dados controlados pelo cliente chegam a rotas que devem autenticar, autorizar e validar. No contexto, a fronteira aparece condensada na interface do sistema.",
+      "fluxos": "F09 a F18 no nível 1. F01 a F08 representam a interface externa no nível 0."
+    },
+    {
+      "id": "TB-02",
+      "separa": "Host | contêiner na bridge labnet",
+      "interpretacao": "O encaminhamento da porta do host chega ao processo do contêiner. Loopback restringe a publicação no host. Outros serviços da mesma bridge e saída de rede são questões distintas.",
+      "fluxos": "F09 a F18 no percurso de rede. A passagem coincide com TB-01, sob outra perspectiva."
+    },
+    {
+      "id": "TB-03",
+      "separa": "Lógica de aplicação | armazenamentos",
+      "interpretacao": "A operação passa de requisição a leitura ou gravação de ativos internos. SQLite e MarsDB são locais. A fronteira expressa uma distinção lógica, com permissões de processo e de arquivo.",
+      "fluxos": "F21 a F46. D0 pertence ao cliente e fica fora desta fronteira."
+    }
+  ],
+  "arestas": [
+    {
+      "id": "F01",
+      "origem": "E1",
+      "destino": "P1",
+      "dados": "Credenciais, cadastro, recuperação, navegação e arquivos públicos",
+      "protocolo": "Interface web / formulário",
+      "fronteiras": [],
+      "tipo": "acao"
+    },
+    {
+      "id": "F02",
+      "origem": "P1",
+      "destino": "E1",
+      "dados": "Formulários, identidade inicial e respostas públicas",
+      "protocolo": "Interface web / renderização",
+      "fronteiras": [],
+      "tipo": "tela"
+    },
+    {
+      "id": "F03",
+      "origem": "E2",
+      "destino": "P1",
+      "dados": "Ações autenticadas de sessão, cesta e compra",
+      "protocolo": "Interface web / formulário",
+      "fronteiras": [],
+      "tipo": "acao"
+    },
+    {
+      "id": "F04",
+      "origem": "P1",
+      "destino": "E2",
+      "dados": "Perfil, itens, estado de compra e comprovante",
+      "protocolo": "Interface web / renderização",
+      "fronteiras": [],
+      "tipo": "tela"
+    },
+    {
+      "id": "F05",
+      "origem": "E3",
+      "destino": "P1",
+      "dados": "Consulta de usuários e moderação de feedback",
+      "protocolo": "Interface web / formulário",
+      "fronteiras": [],
+      "tipo": "acao"
+    },
+    {
+      "id": "F06",
+      "origem": "P1",
+      "destino": "E3",
+      "dados": "Listas e resultado da moderação",
+      "protocolo": "Interface web / renderização",
+      "fronteiras": [],
+      "tipo": "tela"
+    },
+    {
+      "id": "F07",
+      "origem": "E4",
+      "destino": "P1",
+      "dados": "Consulta de pedidos e comando de entrega",
+      "protocolo": "Interface web / formulário",
+      "fronteiras": [],
+      "tipo": "acao"
+    },
+    {
+      "id": "F08",
+      "origem": "P1",
+      "destino": "E4",
+      "dados": "Pedidos e estado de entrega",
+      "protocolo": "Interface web / renderização",
+      "fronteiras": [],
+      "tipo": "tela"
+    },
+    {
+      "id": "F09",
+      "origem": "P1",
+      "destino": "P2",
+      "dados": "E-mail e senha, cookie ou JWT Bearer",
+      "protocolo": "HTTP / JSON",
+      "fronteiras": [
+        "TB-01",
+        "TB-02"
+      ],
+      "tipo": "http_req"
+    },
+    {
+      "id": "F10",
+      "origem": "P2",
+      "destino": "P1",
+      "dados": "JWT, ID de cesta, perfil e erros",
+      "protocolo": "HTTP / JSON",
+      "fronteiras": [
+        "TB-01",
+        "TB-02"
+      ],
+      "tipo": "http_res"
+    },
+    {
+      "id": "F11",
+      "origem": "P1",
+      "destino": "P3",
+      "dados": "Cadastro, IDs, e-mail, resposta e nova senha",
+      "protocolo": "HTTP / JSON",
+      "fronteiras": [
+        "TB-01",
+        "TB-02"
+      ],
+      "tipo": "http_req"
+    },
+    {
+      "id": "F12",
+      "origem": "P3",
+      "destino": "P1",
+      "dados": "Confirmações de cadastro, pergunta e resultado do reset",
+      "protocolo": "HTTP / JSON",
+      "fronteiras": [
+        "TB-01",
+        "TB-02"
+      ],
+      "tipo": "http_res"
+    },
+    {
+      "id": "F13",
+      "origem": "P1",
+      "destino": "P4",
+      "dados": "JWT, itens, endereço, cartão de teste e IDs do checkout",
+      "protocolo": "HTTP / JSON",
+      "fronteiras": [
+        "TB-01",
+        "TB-02"
+      ],
+      "tipo": "http_req"
+    },
+    {
+      "id": "F14",
+      "origem": "P4",
+      "destino": "P1",
+      "dados": "Cesta, meios de pagamento, resultado e confirmação de pedido",
+      "protocolo": "HTTP / JSON",
+      "fronteiras": [
+        "TB-01",
+        "TB-02"
+      ],
+      "tipo": "http_res"
+    },
+    {
+      "id": "F15",
+      "origem": "P1",
+      "destino": "P5",
+      "dados": "JWT, consultas e comandos de moderação ou entrega",
+      "protocolo": "HTTP / JSON",
+      "fronteiras": [
+        "TB-01",
+        "TB-02"
+      ],
+      "tipo": "http_req"
+    },
+    {
+      "id": "F16",
+      "origem": "P5",
+      "destino": "P1",
+      "dados": "Dados de contas, feedbacks e pedidos, resultado das operações",
+      "protocolo": "HTTP / JSON",
+      "fronteiras": [
+        "TB-01",
+        "TB-02"
+      ],
+      "tipo": "http_res"
+    },
+    {
+      "id": "F17",
+      "origem": "P1",
+      "destino": "P6",
+      "dados": "Caminho de listagem ou nome do arquivo",
+      "protocolo": "HTTP / caminho",
+      "fronteiras": [
+        "TB-01",
+        "TB-02"
+      ],
+      "tipo": "http_req"
+    },
+    {
+      "id": "F18",
+      "origem": "P6",
+      "destino": "P1",
+      "dados": "HTML de listagem ou bytes do documento",
+      "protocolo": "HTTP / HTML, PDF ou Markdown",
+      "fronteiras": [
+        "TB-01",
+        "TB-02"
+      ],
+      "tipo": "http_res"
+    },
+    {
+      "id": "F19",
+      "origem": "P1",
+      "destino": "D0",
+      "dados": "JWT, cookie e ID da cesta",
+      "protocolo": "Web Storage / cookie",
+      "fronteiras": [],
+      "tipo": "browser"
+    },
+    {
+      "id": "F20",
+      "origem": "D0",
+      "destino": "P1",
+      "dados": "JWT e ID da cesta para requisições",
+      "protocolo": "Web Storage / cookie",
+      "fronteiras": [],
+      "tipo": "browser"
+    },
+    {
+      "id": "F21",
+      "origem": "P2",
+      "destino": "D1",
+      "dados": "Consulta de credenciais e busca ou criação da cesta",
+      "protocolo": "Sequelize / SQL local",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "store_req"
+    },
+    {
+      "id": "F22",
+      "origem": "D1",
+      "destino": "P2",
+      "dados": "Modelo da conta e ID da cesta",
+      "protocolo": "Sequelize / SQL local",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "store_res"
+    },
+    {
+      "id": "F23",
+      "origem": "P2",
+      "destino": "D2",
+      "dados": "Gravação ou consulta por JWT",
+      "protocolo": "Acesso em memória",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "store_req"
+    },
+    {
+      "id": "F24",
+      "origem": "D2",
+      "destino": "P2",
+      "dados": "Perfil, ID da cesta ou ausência de sessão",
+      "protocolo": "Acesso em memória",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "store_res"
+    },
+    {
+      "id": "F25",
+      "origem": "P3",
+      "destino": "D1",
+      "dados": "Conta, pergunta, HMAC da resposta e hash de nova senha",
+      "protocolo": "Sequelize / SQL local",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "store_req"
+    },
+    {
+      "id": "F26",
+      "origem": "D1",
+      "destino": "P3",
+      "dados": "Modelos, pergunta e resultado da gravação",
+      "protocolo": "Sequelize / SQL local",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "store_res"
+    },
+    {
+      "id": "F27",
+      "origem": "P4",
+      "destino": "D1",
+      "dados": "Cesta, estoque, endereços, cartões, carteira e entrega",
+      "protocolo": "Sequelize / SQL local",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "store_req"
+    },
+    {
+      "id": "F28",
+      "origem": "D1",
+      "destino": "P4",
+      "dados": "Linhas consultadas e confirmação de gravações",
+      "protocolo": "Sequelize / SQL local",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "store_res"
+    },
+    {
+      "id": "F29",
+      "origem": "P4",
+      "destino": "D3",
+      "dados": "Registro do pedido ou consulta do histórico",
+      "protocolo": "MarsDB / documento em memória",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "store_req"
+    },
+    {
+      "id": "F30",
+      "origem": "D3",
+      "destino": "P4",
+      "dados": "Documento de pedido ou resultado da gravação",
+      "protocolo": "MarsDB / documento em memória",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "store_res"
+    },
+    {
+      "id": "F31",
+      "origem": "P5",
+      "destino": "D1",
+      "dados": "Consulta de contas e feedbacks ou exclusão de feedback",
+      "protocolo": "Sequelize / SQL local",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "store_req"
+    },
+    {
+      "id": "F32",
+      "origem": "D1",
+      "destino": "P5",
+      "dados": "Linhas consultadas ou resultado da exclusão",
+      "protocolo": "Sequelize / SQL local",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "store_res"
+    },
+    {
+      "id": "F33",
+      "origem": "P4",
+      "destino": "D2",
+      "dados": "Consulta do JWT para obter titular e cesta",
+      "protocolo": "Acesso em memória",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "store_req"
+    },
+    {
+      "id": "F34",
+      "origem": "D2",
+      "destino": "P4",
+      "dados": "Perfil associado e ID de cesta",
+      "protocolo": "Acesso em memória",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "store_res"
+    },
+    {
+      "id": "F35",
+      "origem": "P5",
+      "destino": "D3",
+      "dados": "Consulta de pedidos ou alteração da entrega por ID",
+      "protocolo": "MarsDB / documento em memória",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "store_req"
+    },
+    {
+      "id": "F36",
+      "origem": "D3",
+      "destino": "P5",
+      "dados": "Pedidos e resultado de atualização",
+      "protocolo": "MarsDB / documento em memória",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "store_res"
+    },
+    {
+      "id": "F37",
+      "origem": "P4",
+      "destino": "D4",
+      "dados": "Gravação do comprovante e identificação do pedido",
+      "protocolo": "Sistema de arquivos / PDF",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "store_req"
+    },
+    {
+      "id": "F38",
+      "origem": "D4",
+      "destino": "P4",
+      "dados": "Fim da escrita ou erro do arquivo",
+      "protocolo": "Sistema de arquivos / PDF",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "store_res"
+    },
+    {
+      "id": "F39",
+      "origem": "P6",
+      "destino": "D4",
+      "dados": "Leitura de diretório ou arquivo por nome",
+      "protocolo": "Sistema de arquivos / leitura",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "store_req"
+    },
+    {
+      "id": "F40",
+      "origem": "D4",
+      "destino": "P6",
+      "dados": "Metadados de arquivos ou documento",
+      "protocolo": "Sistema de arquivos / leitura",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "store_res"
+    },
+    {
+      "id": "F41",
+      "origem": "P2",
+      "destino": "D5",
+      "dados": "Método, URL, horário, origem e status de autenticação HTTP",
+      "protocolo": "Escrita local / log HTTP",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "log"
+    },
+    {
+      "id": "F42",
+      "origem": "P3",
+      "destino": "D5",
+      "dados": "Método, URL inclusive query string, origem, horário e status de cadastro ou reset",
+      "protocolo": "Escrita local / log HTTP",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "log"
+    },
+    {
+      "id": "F43",
+      "origem": "P4",
+      "destino": "D5",
+      "dados": "Método, URL, horário, origem e status de cesta e checkout",
+      "protocolo": "Escrita local / log HTTP",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "log"
+    },
+    {
+      "id": "F44",
+      "origem": "P5",
+      "destino": "D5",
+      "dados": "Método, URL, horário, origem e status de operações privilegiadas",
+      "protocolo": "Escrita local / log HTTP",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "log"
+    },
+    {
+      "id": "F45",
+      "origem": "P5",
+      "destino": "D2",
+      "dados": "Consulta do token associado a cada conta listada",
+      "protocolo": "Acesso em memória",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "store_req"
+    },
+    {
+      "id": "F46",
+      "origem": "D2",
+      "destino": "P5",
+      "dados": "Referência à sessão e horário declarado de emissão",
+      "protocolo": "Acesso em memória",
+      "fronteiras": [
+        "TB-03"
+      ],
+      "tipo": "store_res"
+    }
+  ],
+  "contexto": {
+    "processo": "P0",
+    "interfaces": [
+      "F01",
+      "F02",
+      "F03",
+      "F04",
+      "F05",
+      "F06",
+      "F07",
+      "F08"
+    ],
+    "fronteira": "TB-01"
+  },
+  "fluxos": {
+    "FX1": {
+      "nome": "Login e uso da sessão",
+      "responsavel_previsto": "Diego Fonseca da Silva",
+      "revisor_previsto": "Gustavo Gonçalves Trindade",
+      "descricao": "Após enviar e-mail e senha, o cliente recebe uma sessão de compra se a autenticação for bem-sucedida. A SPA armazena o token e o ID de cesta e reutiliza a credencial para identificar a conta e operar as rotas protegidas. O fluxo inclui consulta do perfil e limpeza local de sessão.",
+      "ator_gatilho": "Visitante E1 ao enviar o formulário de login. O cliente E2 atua depois da emissão.",
+      "precondicoes": "Conta cadastrada, aplicação acessível e credenciais válidas. O código prevê TOTP quando configurado. O desafio de segundo fator fica fora do recorte principal.",
+      "resultado": "Token para a conta autenticada, ID de cesta associado e perfil nas chamadas de sessão. Logout remove o estado do navegador.",
+      "requisicoes": [
+        [
+          "POST /rest/user/login",
+          "M1 V1, V2 e V6",
+          "Requisição de login, emissão e série de falhas. Figuras 7 e 8 e extrato A1."
+        ],
+        [
+          "GET /rest/user/whoami",
+          "Código v20.2.0",
+          "routes/currentUser.ts. Cookie token e parâmetro fields."
+        ],
+        [
+          "GET /rest/basket/:id",
+          "M1 V3, chamada protegida de apoio",
+          "Requisição sem token recusada e com token válida para acesso. O objeto é analisado no FX3."
+        ]
+      ],
+      "dados": [
+        [
+          "E-mail, ID e IP de acesso",
+          "Dado pessoal quando identificável",
+          "F09, F10, F21, F22, D1 e D5",
+          "Confidencialidade"
+        ],
+        [
+          "Senha e hash MD5",
+          "Credencial ou segredo",
+          "Senha em F09, hash em D1 e observado em F10",
+          "Confidencialidade"
+        ],
+        [
+          "JWT e cookie token",
+          "Credencial de sessão",
+          "F09, F10, F19, F20, D0 e D2",
+          "Confidencialidade"
+        ],
+        [
+          "Papel e vínculo de cesta",
+          "Interno e dado pessoal vinculado",
+          "D1, D2, F10 e D0",
+          "Integridade"
+        ]
+      ],
+      "controles": [
+        [
+          "Assinatura RS256 em emissão e verificação em rotas protegidas",
+          "P2, F09 e F10",
+          "Código e JWT preservado em V1 e V2."
+        ],
+        [
+          "Resposta inválida HTTP 401 e TOTP condicional",
+          "P2",
+          "V6 e routes/login.ts. O segundo fator não foi exercitado na M1."
+        ],
+        [
+          "Hash de senha e filtro de conta excluída",
+          "P2, D1",
+          "routes/login.ts, models/user.ts e V2. O hash é MD5 sem sal."
+        ],
+        [
+          "Registro HTTP com rotação",
+          "D5, F41",
+          "server.ts. Evidência de configuração, sem verificação de proteção do arquivo."
+        ]
+      ],
+      "questionario": {
+        "Q1": "FX1 vincula uma identidade a uma sessão que sustenta compras e operações privilegiadas. Uma falha em P2 pode ampliar o alcance das demais ameaças, como ocorreu na passagem a admin em T-FX1-02.",
+        "Q2": "E1 fornece credenciais. Com sessão emitida, E2 usa os serviços da conta. Os papéis de admin e accounting compartilham a entrada de login e têm funções específicas modeladas em FX4.",
+        "Q3": "F01 chega a P1 pela interface. F09 transporta JSON para P2, que consulta D1 via F21 e F22 e usa o mapa D2 via F23 e F24. F10 devolve a sessão. F19 e F20 tratam Web Storage e cookie, e F41 grava metadados HTTP.",
+        "Q4": "F09 e F10 cruzam TB-01 e TB-02 quando o navegador chega ao processo na porta publicada. F21 a F24 e F41 cruzam TB-03. Em D1 a entrada ganha efeito sobre consulta, de modo que o e-mail precisa entrar como parâmetro.",
+        "Q5": "E-mail, ID e IP vinculável são pessoais. Senha, hash e JWT são segredos. D1 guarda o hash e D0 e D2 guardam estado de sessão. Os campos examinados não integram as categorias sensíveis do art. 5º, II da LGPD.",
+        "Q6": "Corpo JSON de login, header Authorization, cookie token e parâmetro fields de whoami entram pela interface ou pela API. localStorage e sessionStorage compõem a superfície de dados do navegador.",
+        "Q7": "V6 mostra rejeição de senha incorreta. A M1 confirma JWT assinado e hash MD5. O código identifica verificação de assinatura, TOTP condicional, mapa de sessão e log HTTP. O Compose usa HTTP de loopback.",
+        "S1": "P2 compara o valor da senha com D1. As rotas protegidas usam JWT e whoami usa cookie e mapa. SQLite é biblioteca local, acessada pelo processo, sem login de banco pela rede.",
+        "S2": "P2 emite JWT RS256. A SPA o guarda em localStorage e em cookie com prazo de oito horas e o interceptor usa Bearer. O código fornece expiresIn à biblioteca 0.4.0, cuja opção é expiresInMinutes. Os JWTs de V1 e V2 não têm exp. A inspeção do logout mostra remoção local, sem operação de revogação identificada no percurso. Novo login emite novo token.",
+        "S3": "T-FX1-01 explora tentativas sem contenção efetiva na amostra. T-FX1-06 examina o efeito potencial da chave fixa sobre papéis reservados. A M1 confirmou ainda um login administrativo sem senha correta por injeção.",
+        "T1": "O e-mail pode ser modificado antes de F09 e alterar o SQL em F21. P1 e D0 estão sob controle do cliente. Manipular arquivo SQLite diretamente requer condição de host excluída do recorte.",
+        "T2": "P2 calcula hash da senha e verifica conta ativa no sentido de não excluída pela consulta. O e-mail ainda compõe o SQL por interpolação, como demonstrou V1. A autorização de objeto deve ocorrer nas rotas consumidoras.",
+        "T3": "RS256 protege a integridade do JWT quando a assinatura é validada com chave confiável. O transporte em loopback usa HTTP. O MD5 de senha não protege o fluxo nem corrige a interpolação.",
+        "R1": "F41 grava método, URL, data, status, origem e agente de usuário. A inspeção de Morgan combined não identificou ID da conta e da sessão no mesmo evento de autenticação.",
+        "R2": "D5 é local, com rotação diária e retenção configurada de dois dias. O modelo não encontrou coleta separada ou imutabilidade para F41.",
+        "R3": "Sim. Uma autenticação ou tentativa pode ser negada quando só se dispõe da origem aparente, sem ligação com uma sessão e o resultado do controle. O cenário está em T-FX1-03.",
+        "I1": "O JWT de F10 inclui hash e perfil, observado em V2. whoami atende a lista de fields sem uma lista de permissão identificada no código, que também possui teste upstream para o campo password.",
+        "I2": "P1 precisa do identificador, do estado de autenticação e de informações de interface. Serializar o modelo da conta transfere dados que não são necessários à sessão, como password.",
+        "I3": "HTTP local não fornece TLS. O hash fica em SQLite, o token assinado é legível pelo portador e a SPA o guarda em D0. Não houve evidência de criptografia de arquivo nem de gestão isolada da chave de demonstração.",
+        "D1": "Login consome consultas de conta e cesta, CPU e memória para emissão e mapa D2. O efeito por volume em T-FX1-05 não foi medido.",
+        "D2": "O parser tem limite geral por corpo. As quinze falhas de V6 não encontraram bloqueio e o caminho de login analisado não definiu limitador próprio. Limite de mapa e expurgo não foram identificados.",
+        "D3": "Login local depende de SQLite, do processo Node.js e dos arquivos de configuração. O recorte de e-mail e senha não depende de Google nem de provedor externo.",
+        "E1": "P2 autentica. A rota protegida deve validar o token e aplicar a permissão do recurso. A prova de assinatura isolada não decide papel, objeto ou campo permitido.",
+        "E2": "V1 obteve papel administrativo pelo login. T-FX1-06 considera tokens forjados com a chave distribuída. FX3 e FX4 discriminam os recursos que aplicam verificações distintas.",
+        "E3": "O Dockerfile da versão define UID 65532. SQLite e mapa pertencem ao processo Node.js. A modelagem não verificou privilégios efetivos por inspeção de contêiner.",
+        "V1": "T-FX1-02 tem média 9,8 e prevalece porque a entrada anônima pode levar à identidade administrativa, com efeitos sobre dados e funções de outros titulares.",
+        "V2": "A M1 confirmou T-FX1-02 por V1, T-FX1-04 por V2 e a sequência de T-FX1-01 por V6. Esgotamento, atribuição incompleta e uso de chave em ataque ficam como hipóteses documentais.",
+        "V3": "O recorte usa login local por senha. Verificação temporal rota a rota, recuperação com TOTP e comportamento após logout requerem ensaio separado em instância controlada."
+      },
+      "conclusao": [
+        "A primeira correção incide na consulta de credenciais. Mesmo após parametrizá-la, as sessões ainda dependeriam de chaves e claims adequadas. A retirada de hash do token reduz exposição, enquanto a migração da senha e a revogação de tokens antigos limitam o efeito do material já emitido.",
+        "Risco residual esperado após o tratamento decorre de credenciais já comprometidas ou reutilizadas, abuso distribuído e roubo de sessão antes da expiração. A mitigação requer verificar o caminho normal de login, os casos negativos e o reaproveitamento de token após encerramento."
+      ],
+      "elementos": [
+        "D0",
+        "D1",
+        "D2",
+        "D5",
+        "E1",
+        "E2",
+        "P1",
+        "P2",
+        "F01",
+        "F02",
+        "F03",
+        "F04",
+        "F09",
+        "F10",
+        "F19",
+        "F20",
+        "F21",
+        "F22",
+        "F23",
+        "F24",
+        "F41"
+      ],
+      "arestas": [
+        "F01",
+        "F02",
+        "F03",
+        "F04",
+        "F09",
+        "F10",
+        "F19",
+        "F20",
+        "F21",
+        "F22",
+        "F23",
+        "F24",
+        "F41"
+      ],
+      "matriz": {
+        "D0": {
+          "S": [],
+          "T": [
+            "NA11"
+          ],
+          "R": [],
+          "I": [
+            "T-FX1-04"
+          ],
+          "D": [
+            "NA10"
+          ],
+          "E": []
+        },
+        "D1": {
+          "S": [],
+          "T": [
+            "NA7"
+          ],
+          "R": [],
+          "I": [
+            "NA7"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "D2": {
+          "S": [],
+          "T": [
+            "NA7"
+          ],
+          "R": [],
+          "I": [
+            "T-FX1-04"
+          ],
+          "D": [
+            "T-FX1-05"
+          ],
+          "E": []
+        },
+        "D5": {
+          "S": [],
+          "T": [
+            "NA9"
+          ],
+          "R": [
+            "T-FX1-03"
+          ],
+          "I": [
+            "NA9"
+          ],
+          "D": [
+            "NA9"
+          ],
+          "E": []
+        },
+        "E1": {
+          "S": [
+            "T-FX1-01"
+          ],
+          "T": [],
+          "R": [
+            "T-FX1-03"
+          ],
+          "I": [],
+          "D": [],
+          "E": []
+        },
+        "E2": {
+          "S": [
+            "NA1"
+          ],
+          "T": [],
+          "R": [
+            "T-FX1-03"
+          ],
+          "I": [],
+          "D": [],
+          "E": []
+        },
+        "P1": {
+          "S": [
+            "NA8"
+          ],
+          "T": [
+            "NA13"
+          ],
+          "R": [
+            "NA8"
+          ],
+          "I": [
+            "T-FX1-04"
+          ],
+          "D": [
+            "NA10"
+          ],
+          "E": [
+            "NA8"
+          ]
+        },
+        "P2": {
+          "S": [
+            "T-FX1-01"
+          ],
+          "T": [
+            "T-FX1-02"
+          ],
+          "R": [
+            "T-FX1-03"
+          ],
+          "I": [
+            "T-FX1-04"
+          ],
+          "D": [
+            "T-FX1-05"
+          ],
+          "E": [
+            "T-FX1-06"
+          ]
+        },
+        "F01": {
+          "S": [],
+          "T": [
+            "NA13"
+          ],
+          "R": [],
+          "I": [
+            "NA13"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F02": {
+          "S": [],
+          "T": [
+            "NA13"
+          ],
+          "R": [],
+          "I": [
+            "NA13"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F03": {
+          "S": [],
+          "T": [
+            "NA13"
+          ],
+          "R": [],
+          "I": [
+            "NA13"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F04": {
+          "S": [],
+          "T": [
+            "NA13"
+          ],
+          "R": [],
+          "I": [
+            "NA13"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F09": {
+          "S": [],
+          "T": [
+            "T-FX1-02"
+          ],
+          "R": [],
+          "I": [
+            "NA4"
+          ],
+          "D": [
+            "T-FX1-05"
+          ],
+          "E": []
+        },
+        "F10": {
+          "S": [],
+          "T": [
+            "NA3"
+          ],
+          "R": [],
+          "I": [
+            "T-FX1-04"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F19": {
+          "S": [],
+          "T": [
+            "NA11"
+          ],
+          "R": [],
+          "I": [
+            "T-FX1-04"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F20": {
+          "S": [],
+          "T": [
+            "NA11"
+          ],
+          "R": [],
+          "I": [
+            "T-FX1-04"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F21": {
+          "S": [],
+          "T": [
+            "T-FX1-02"
+          ],
+          "R": [],
+          "I": [
+            "NA4"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F22": {
+          "S": [],
+          "T": [
+            "NA3"
+          ],
+          "R": [],
+          "I": [
+            "NA4"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F23": {
+          "S": [],
+          "T": [
+            "NA3"
+          ],
+          "R": [],
+          "I": [
+            "NA4"
+          ],
+          "D": [
+            "T-FX1-05"
+          ],
+          "E": []
+        },
+        "F24": {
+          "S": [],
+          "T": [
+            "NA3"
+          ],
+          "R": [],
+          "I": [
+            "NA4"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F41": {
+          "S": [],
+          "T": [
+            "NA9"
+          ],
+          "R": [],
+          "I": [
+            "NA9"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        }
+      }
+    },
+    "FX2": {
+      "nome": "Cadastro e recuperação de senha",
+      "responsavel_previsto": "Leonardo Pacheco B Dias",
+      "revisor_previsto": "Diego Fonseca da Silva",
+      "descricao": "O visitante cria uma conta e escolhe a pergunta de segurança da demonstração. A interface envia uma segunda requisição que associa a resposta ao ID criado. Na recuperação, o visitante consulta a pergunta vinculada ao e-mail e envia a resposta com a nova senha.",
+      "ator_gatilho": "Visitante E1 no envio do cadastro ou na opção de senha esquecida.",
+      "precondicoes": "Cadastro com dados válidos. Na recuperação, conta com resposta de segurança associada. O roteiro da M1 usou dados sintéticos.",
+      "resultado": "Conta criada com papel de cliente e recuperação que altera somente a conta correspondente à prova apresentada.",
+      "requisicoes": [
+        [
+          "POST /api/Users e POST /api/SecurityAnswers/",
+          "M1 V7 e código",
+          "Registro de usuário e associação separada. A M1 testou chamadas sem vínculo e com ID explícito."
+        ],
+        [
+          "GET /api/SecurityQuestions",
+          "Código v20.2.0",
+          "Consulta ao catálogo de perguntas para o formulário."
+        ],
+        [
+          "GET /rest/user/security-question?email=…",
+          "M1 V7",
+          "Retorno da pergunta de conta sintética no histórico HTTP."
+        ],
+        [
+          "POST /rest/user/reset-password",
+          "M1 V7",
+          "Quatro falhas e sucesso na quinta tentativa. Extrato A2. Login posterior pertence a FX1."
+        ]
+      ],
+      "dados": [
+        [
+          "E-mail e ID de usuário",
+          "Dado pessoal quando identificável",
+          "F11, F12, D1 e possivelmente F42",
+          "Confidencialidade"
+        ],
+        [
+          "Pergunta e vínculo com conta",
+          "Dado pessoal quando associado",
+          "F11, F12, F25, F26 e D1",
+          "Confidencialidade"
+        ],
+        [
+          "Resposta e senha nova",
+          "Credenciais ou segredos",
+          "F11, HMAC e hash em D1",
+          "Confidencialidade"
+        ],
+        [
+          "Papel e estado de cadastro",
+          "Interno e dado pessoal vinculado",
+          "F12, F25 e D1",
+          "Integridade"
+        ]
+      ],
+      "controles": [
+        [
+          "Unicidade de e-mail e de UserId na resposta",
+          "P3 e D1",
+          "models/user.ts e models/securityAnswer.ts. A M1 registrou HTTP 400 em tentativa de segunda resposta."
+        ],
+        [
+          "HMAC da resposta e hash da senha",
+          "P3, F25 e D1",
+          "routes/resetPassword.ts e modelos. A chave HMAC da demonstração está no código."
+        ],
+        [
+          "Limite de 100 solicitações em cinco minutos no reset",
+          "P3 e F11",
+          "Cabeçalhos de V7 e server.ts. A cota não foi esgotada na evidência."
+        ],
+        [
+          "Verificação de senha nova e repetição",
+          "P3",
+          "routes/resetPassword.ts. O código rejeita vazio ou divergência."
+        ]
+      ],
+      "questionario": {
+        "Q1": "FX2 cria a identidade inicial e permite recuperar uma conta. Uma resposta previsível em P3 pode substituir a senha de um titular, como em T-FX2-01.",
+        "Q2": "E1 pode iniciar cadastro ou reset sem sessão. A associação na SPA ocorre após o retorno do cadastro. Na M1 o script também usou um JWT no ensaio de associação com ID explícito, o que não prova exigência universal de autenticação nessa rota.",
+        "Q3": "E1 envia dados por F01. P1 chama P3 por F11 em HTTP, com corpo JSON ou query string na consulta. P3 lê e grava D1 por F25 e F26, responde por F12 e registra metadados por F42 em D5.",
+        "Q4": "F11 e F12 atravessam TB-01 e TB-02. F25, F26 e F42 atravessam TB-03, onde registros da conta, recuperação e logs passam a integrar o estado do servidor.",
+        "Q5": "E-mail e ID são dados pessoais quando vinculáveis. Senha e resposta são segredos. A pergunta associada também diz respeito à conta. Um valor de campo livre pode exigir nova classificação conforme seu conteúdo efetivo.",
+        "Q6": "JSON expõe role, UserId e SecurityQuestionId como campos de interesse e answer, new e repeat no reset. O e-mail em query string constitui entrada da API e risco de registro de dado pessoal.",
+        "Q7": "O código aplica unicidade, HMAC, hash e verificação básica da nova senha. V7 observou quatro recusas, um sucesso e cabeçalhos que informam a cota. A unicidade impediu a segunda associação em conta já configurada.",
+        "S1": "A recuperação de P3 compara a resposta com HMAC armazenado em D1 para o e-mail. O cadastro não prova posse do endereço apenas por recebê-lo. P3 acessa SQLite por biblioteca local.",
+        "S2": "A recuperação atual usa conhecimento persistente, sem credencial de uso único no percurso. O token recebido depois do novo login pertence ao FX1, que também documenta a expiração ausente nas amostras.",
+        "S3": "T-FX2-01 mostra que conhecer ou adivinhar a resposta de outro titular é suficiente no cenário de teste. T-FX2-02 considera conta incompleta, cuja associação pode depender de dado controlado pelo solicitante.",
+        "T1": "Campos de cadastro e IDs podem ser alterados antes de F11. P3 grava estado durável da conta em D1. A atribuição de role e o vínculo da resposta exigem origem confiável no servidor.",
+        "T2": "A rota valida parte dos campos e D1 impõe restrições de unicidade. O recurso de cadastro recebe campos do corpo, e a resposta de segurança é gravada separadamente com UserId explícito.",
+        "T3": "HMAC autentica o valor de comparação em D1, mas não aumenta a entropia da resposta e a chave da demonstração está distribuída. O tráfego observado é HTTP e o esquema da API aceita papéis definidos no modelo.",
+        "R1": "F42 registra acesso HTTP ao cadastro e reset, com horário, método, URL, origem e status. Não há evidência de vínculo entre solicitação e prova de posse de canal do titular.",
+        "R2": "A rotação de D5 limita retenção. A fonte não demonstrou proteção contra edição por processo privilegiado. Um nome de arquivo audit.json do rotator não equivale a trilha de auditoria da aplicação.",
+        "R3": "Um visitante pode negar a troca da senha. O e-mail alvo é informação do pedido e não identifica o autor. T-FX2-03 trata essa diferença.",
+        "I1": "F12 revela pergunta vinculada em V7. A resposta HTTP 200 de reset preservada em V7 inclui um campo password com hash. A query string pode deixar e-mail em logs ou histórico.",
+        "I2": "A consulta pública devolve associação desnecessária para um reset por canal verificado. A confirmação da troca precisa informar o resultado, sem devolver o modelo completo do usuário.",
+        "I3": "F11 e F12 usam HTTP local. D1 guarda hash de senha e HMAC da resposta, com limitações documentadas. Não se comprovou cifragem em repouso dos dados do arquivo SQLite.",
+        "D1": "Criação de conta, carteira e resposta gera escritas no SQLite. Uma sequência automatizada pode pressionar o mesmo processo usado por outras rotas, hipótese T-FX2-05.",
+        "D2": "A cota de reset é 100 em cinco minutos por chave derivada de IP no código. O tratamento de proxy merece validação. A M1 não mediu o centésimo primeiro pedido. O cadastro não passa por esse middleware de reset.",
+        "D3": "O mecanismo atual depende de Express e SQLite. Um canal externo verificado de recuperação integra a solução proposta e exige política de disponibilidade e de reenvio.",
+        "E1": "O servidor consulta conta e resposta ao redefinir. O fluxo de cadastro deve forçar papel mínimo, e a associação deve usar identidade gerada e vinculada à transação.",
+        "E2": "A tomada de conta foi confirmada por V7. A atribuição de role privilegiado em T-FX2-06 tem evidência de código e teste upstream, sem reprodução pela equipe no laboratório documentado.",
+        "E3": "P3 executa no mesmo processo e identidade de sistema que os demais módulos. O acesso de escrita ao SQLite abrange conta e resposta. Uma aplicação real deve limitar operação e campo por serviço, mesmo em processo compartilhado.",
+        "V1": "T-FX2-06 tem média 9,0 pelo alcance dos papéis privilegiados. T-FX2-01, com média 8,8, é a ameaça de maior prioridade já demonstrada no fluxo.",
+        "V2": "V7 confirma o reset com palpite e a obtenção da pergunta, vinculados a T-FX2-01 e T-FX2-04. O caso negativo de associação duplicada delimita T-FX2-02. As demais ameaças ficam plausíveis.",
+        "V3": "Seria necessário validar criação com role alterado, associação para conta ainda sem resposta, alcance do limitador e invalidação de sessões após reset no ambiente da equipe."
+      },
+      "conclusao": [
+        "O papel inicial precisa ser atribuído no servidor. A recuperação deve abandonar perguntas previsíveis e adotar prova de posse de canal com uso único e prazo curto. Essas correções tratam causas diferentes e precisam de verificação independente.",
+        "Após a substituição, o risco residual concentra-se no comprometimento do canal de recuperação e na automação de solicitações. Respostas uniformes, cotas por conta e origem, trilha protegida e alerta ao titular reduzem exposição e tempo de reação."
+      ],
+      "elementos": [
+        "D1",
+        "D5",
+        "E1",
+        "P1",
+        "P3",
+        "F01",
+        "F02",
+        "F11",
+        "F12",
+        "F25",
+        "F26",
+        "F42"
+      ],
+      "arestas": [
+        "F01",
+        "F02",
+        "F11",
+        "F12",
+        "F25",
+        "F26",
+        "F42"
+      ],
+      "matriz": {
+        "D1": {
+          "S": [],
+          "T": [
+            "T-FX2-02"
+          ],
+          "R": [],
+          "I": [
+            "NA7"
+          ],
+          "D": [
+            "T-FX2-05"
+          ],
+          "E": []
+        },
+        "D5": {
+          "S": [],
+          "T": [
+            "NA9"
+          ],
+          "R": [
+            "T-FX2-03"
+          ],
+          "I": [
+            "NA9"
+          ],
+          "D": [
+            "NA9"
+          ],
+          "E": []
+        },
+        "E1": {
+          "S": [
+            "T-FX2-01"
+          ],
+          "T": [],
+          "R": [
+            "T-FX2-03"
+          ],
+          "I": [],
+          "D": [],
+          "E": []
+        },
+        "P1": {
+          "S": [
+            "NA8"
+          ],
+          "T": [
+            "NA13"
+          ],
+          "R": [
+            "NA8"
+          ],
+          "I": [
+            "T-FX2-04"
+          ],
+          "D": [
+            "NA10"
+          ],
+          "E": [
+            "NA8"
+          ]
+        },
+        "P3": {
+          "S": [
+            "T-FX2-01"
+          ],
+          "T": [
+            "T-FX2-02"
+          ],
+          "R": [
+            "T-FX2-03"
+          ],
+          "I": [
+            "T-FX2-04"
+          ],
+          "D": [
+            "T-FX2-05"
+          ],
+          "E": [
+            "T-FX2-06"
+          ]
+        },
+        "F01": {
+          "S": [],
+          "T": [
+            "NA13"
+          ],
+          "R": [],
+          "I": [
+            "NA13"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F02": {
+          "S": [],
+          "T": [
+            "NA13"
+          ],
+          "R": [],
+          "I": [
+            "NA13"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F11": {
+          "S": [],
+          "T": [
+            "T-FX2-02"
+          ],
+          "R": [],
+          "I": [
+            "NA4"
+          ],
+          "D": [
+            "T-FX2-05"
+          ],
+          "E": []
+        },
+        "F12": {
+          "S": [],
+          "T": [
+            "NA3"
+          ],
+          "R": [],
+          "I": [
+            "T-FX2-04"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F25": {
+          "S": [],
+          "T": [
+            "T-FX2-02"
+          ],
+          "R": [],
+          "I": [
+            "NA4"
+          ],
+          "D": [
+            "T-FX2-05"
+          ],
+          "E": []
+        },
+        "F26": {
+          "S": [],
+          "T": [
+            "NA3"
+          ],
+          "R": [],
+          "I": [
+            "NA4"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F42": {
+          "S": [],
+          "T": [
+            "NA9"
+          ],
+          "R": [],
+          "I": [
+            "T-FX2-04"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        }
+      }
+    },
+    "FX3": {
+      "nome": "Cesta, checkout e registro do pedido",
+      "responsavel_previsto": "Gustavo Gonçalves Trindade",
+      "revisor_previsto": "João Victor Rodrigues Santos",
+      "descricao": "O comprador consulta a cesta, inclui ou ajusta itens, escolhe endereço e meio de pagamento e confirma a compra. O servidor calcula o valor, registra o pedido na coleção em memória e grava um PDF. O histórico e o download permitem consultar o resultado.",
+      "ator_gatilho": "Comprador E2 com sessão ao abrir a cesta ou confirmar o pedido. A leitura pública de arquivos em P6 inclui E1 como agente no recorte.",
+      "precondicoes": "Token da conta, cesta e itens, endereço e opção de entrega quando aplicáveis, cartão sintético ou carteira de demonstração.",
+      "resultado": "Pedido associado ao comprador e a referências válidas, cesta finalizada e comprovante acessível apenas ao titular na solução pretendida.",
+      "requisicoes": [
+        [
+          "GET /rest/basket/:id",
+          "M1 V3 e V4",
+          "HTTP 200 com token de outra conta no ensaio de leitura e erro verboso com header malformado. Figuras 9 e 10 e extrato A3."
+        ],
+        [
+          "POST /api/BasketItems e PUT /api/BasketItems/:id",
+          "Código v20.2.0",
+          "server.ts e routes/basketItems.ts. Adição, ajuste e consulta de estoque."
+        ],
+        [
+          "GET e POST /api/Addresss, GET e POST /api/Cards",
+          "Código v20.2.0",
+          "Rotas de endereço e cartão. A grafia Addresss segue a API."
+        ],
+        [
+          "GET /api/Deliverys e POST /rest/basket/:id/checkout",
+          "Código e teste upstream",
+          "server.ts e routes/order.ts. Há teste upstream de retorno de orderId em basket.test.ts."
+        ],
+        [
+          "GET /rest/order-history",
+          "Código e teste upstream",
+          "Consulta vinculada ao e-mail transformado na coleção de pedidos. Teste em order-history.test.ts."
+        ],
+        [
+          "GET /ftp/ e GET /ftp/order_{id}.pdf",
+          "M1 V5 para listagem e documento de exemplo. Código para PDF de pedido",
+          "order-completion.component.ts, routes/order.ts e fileServer.ts. Figura 11."
+        ]
+      ],
+      "dados": [
+        [
+          "Itens, quantidade e preço",
+          "Público no catálogo e dado pessoal quando vinculado ao pedido",
+          "F13, F14, D1, D3 e PDF em D4",
+          "Integridade"
+        ],
+        [
+          "Endereço, nome e telefone",
+          "Dado pessoal quando identificável",
+          "F13, F14 e D1. Referência de endereço em D3",
+          "Confidencialidade"
+        ],
+        [
+          "Cartão sintético, validade e titular",
+          "Dado de pagamento quando real e identificável",
+          "F13, D1 e campos mascarados em F14 nas consultas específicas",
+          "Confidencialidade"
+        ],
+        [
+          "JWT, IDs de cesta, entrega, cartão e pedido",
+          "Credencial e identificadores vinculáveis",
+          "D0, D2, F13, D1, D3 e D4",
+          "Integridade"
+        ],
+        [
+          "E-mail associado ao pedido",
+          "Dado pessoal quando identificável",
+          "PDF em D4 e forma parcialmente mascarada em D3",
+          "Confidencialidade"
+        ]
+      ],
+      "controles": [
+        [
+          "Autenticação na cesta e atribuição de UserId",
+          "P4, F13 e D2",
+          "server.ts e lib/insecurity.ts. A M1 registrou recusa sem token em V3."
+        ],
+        [
+          "Filtro de titularidade em consultas específicas de endereço e cartão",
+          "P4 e D1",
+          "routes/address.ts e routes/payment.ts. A listagem de cartão mascara o número."
+        ],
+        [
+          "Cálculo de preço e verificação de estoque",
+          "P4 e D1",
+          "routes/order.ts e routes/basketItems.ts. A checagem de estoque foi localizada nas rotas de itens."
+        ],
+        [
+          "Restrição de formato no download",
+          "P6 e D4",
+          "routes/fileServer.ts. A regra de formato não valida a titularidade do documento."
+        ]
+      ],
+      "questionario": {
+        "Q1": "FX3 transforma a intenção do comprador em pedido e registro de entrega. A consistência entre cesta, titular, forma de pagamento e comprovante determina a integridade da compra.",
+        "Q2": "E2 inicia o fluxo de compra após FX1. E1 não deve operar cestas, mas consegue solicitar o diretório público de P6 e pode induzir erro com header malformado, como em V4.",
+        "Q3": "F03 aciona P1. F13 e F14 usam HTTP e JSON com P4. F27 e F28 acessam SQLite, F29 e F30 a coleção de pedidos, F33 e F34 o mapa de sessão, e F37 e F38 o arquivo de comprovante. P6 lê D4 por F39 e F40 e serve o resultado por F18. F43 produz log de acesso.",
+        "Q4": "As requisições de compra e arquivo passam por TB-01 e TB-02. TB-03 separa a lógica de compra dos armazenamentos. Cruzar D1, D3 e D4 exige consistência entre gravações com mecanismos diferentes.",
+        "Q5": "P4 recebe token, IDs e dados de entrega e cartão de teste. D1 armazena dados cadastrais e cesta, D3 o pedido com e-mail mascarado e referências, D4 o PDF. Dados financeiros não se tornam sensíveis no sentido jurídico do art. 5º, II apenas pela natureza do campo.",
+        "Q6": "Há identificadores em rota, campos ProductId, BasketId, quantity e orderDetails, header Authorization e nome do PDF em URL. São entradas da interface, API e superfície de arquivos.",
+        "Q7": "V3 mostra recusa sem token. No código, consultas específicas de endereço e cartão usam UserId, e o cartão lido é mascarado. O preço parte dos produtos armazenados. V3 evidencia a falha de titularidade na cesta.",
+        "S1": "E2 demonstra posse do token em F13. P4 usa o middleware de autenticação e o mapa de sessões para vincular a chamada ao usuário. P6 entrega arquivos elegíveis sem exigir essa prova.",
+        "S2": "O bearer é emitido no FX1, fica em D0 e é lido em F20. A SPA limpa o token ao sair, e os JWTs históricos não contêm exp. A validade efetiva varia conforme o verificador da rota.",
+        "S3": "Em T-FX3-01, quem possuir a credencial de outro comprador pode apresentá-la em F13. A M1 V3, por sua vez, observou acesso com a credencial da própria conta e ID de terceiro, sem falsificar identidade.",
+        "T1": "IDs e quantidades podem ser alterados na entrada F13. P4 atualiza D1 e D3 e grava D4. Um erro de consistência entre esses destinos pode deixar pedido e cesta em estados diferentes.",
+        "T2": "Estoque e preço têm controles no servidor, com alcance diferente por rota. O checkout procura a cesta pelo ID recebido e lê referências do corpo. Essa diferença sustenta T-FX3-02.",
+        "T3": "HTTP local não fornece integridade criptográfica de transporte. A assinatura do JWT não cobre os campos do checkout. Transações e validações de titularidade precisam abranger os objetos usados.",
+        "R1": "F43 registra rota, horário, origem, método e status. D3 guarda orderId e estado de pedido. O trecho examinado não apresenta trilha única que correlacione esses registros ao ator validado.",
+        "R2": "D5 fica no mesmo ambiente e usa rotação. D3 não é uma trilha imutável, pois seus registros de pedido mudam durante a operação de entrega.",
+        "R3": "Um titular pode negar um checkout quando os registros não demonstram identidade, ID do pedido e resultado na mesma cadeia de eventos, como em T-FX3-03.",
+        "I1": "V3 observou itens e UserId de outra cesta. V4 registrou erro com versão declarada do framework. F18 pode expor PDFs de pedidos, hipótese fundamentada no diretório público e no código.",
+        "I2": "Mascarar número nas respostas de cartão reduz a exposição, mas D1 ainda contém o valor completo no modelo. D3 mascara o e-mail de forma parcial e o PDF contém o e-mail. Minimizar os dados exige revisar cada representação.",
+        "I3": "HTTP de loopback não fornece TLS. A análise documental não demonstrou criptografia de SQLite ou PDFs. Restringir o formato do arquivo não garante confidencialidade.",
+        "D1": "O fluxo usa SQLite, mapa de sessão, memória para pedidos, CPU e descritores para PDF e espaço em disco. O acúmulo em D4 pode prejudicar novas compras.",
+        "D2": "O código verifica estoque em rotas de itens e o parser limita o corpo. Não se identificou quota específica de checkout e de geração de PDF nos trechos examinados.",
+        "D3": "A compra de demonstração usa componentes locais e simula pagamento. Não se comprovou adquirente externo nas rotas estudadas. Falhas do arquivo e da coleção local são dependências do fluxo.",
+        "E1": "P4 exige autenticação para cesta e aplica filtros de titularidade em algumas consultas de cartão e endereço. A cesta de V3 e a busca inicial do checkout usam ID sem predicado equivalente.",
+        "E2": "Sim. V3 confirma leitura horizontal em T-FX3-06. T-FX3-02 considera alteração do estado do pedido e da cesta e depende de teste próprio.",
+        "E3": "O processo Node.js executa com a conta prevista na imagem e alcança D1 a D4 conforme a operação. A separação lógica no DFD não demonstra menor privilégio por módulo.",
+        "V1": "T-FX3-06 tem média 8,4 e evidencia quebra de titularidade em um recurso ligado a conta. T-FX3-02 tem dano potencial maior por envolver escrita e ficou em 7,8 devido à menor base empírica.",
+        "V2": "V3 e V4 sustentam T-FX3-06 e T-FX3-04. V5 demonstra listagem e download de documento de exemplo, dando base a T-FX3-07 sem confirmar exposição de um PDF de cliente.",
+        "V3": "A M1 não registrou o ciclo de checkout completo, nem falhas concorrentes, nem leitura cruzada de comprovante. Revalidar titularidade nas leituras e escritas e observar criação do PDF em instância de teste."
+      },
+      "conclusao": [
+        "A leitura confirmada torna prioritária a autorização por objeto. A mesma política precisa ser avaliada em itens, checkout e comprovantes, pois são caminhos distintos para dados do titular. Recalcular preços no servidor protege apenas uma parte da integridade da transação.",
+        "Mesmo com autorização por objeto, a consistência entre pedido, débito simulado, cesta e arquivo depende de idempotência e tratamento de falhas. O risco residual inclui roubo de sessão e falhas parciais entre armazenamentos. A verificação precisa cobrir repetição e concorrência."
+      ],
+      "elementos": [
+        "D0",
+        "D1",
+        "D2",
+        "D3",
+        "D4",
+        "D5",
+        "E1",
+        "E2",
+        "P1",
+        "P4",
+        "P6",
+        "F01",
+        "F02",
+        "F03",
+        "F04",
+        "F13",
+        "F14",
+        "F17",
+        "F18",
+        "F19",
+        "F20",
+        "F27",
+        "F28",
+        "F29",
+        "F30",
+        "F33",
+        "F34",
+        "F37",
+        "F38",
+        "F39",
+        "F40",
+        "F43"
+      ],
+      "arestas": [
+        "F01",
+        "F02",
+        "F03",
+        "F04",
+        "F13",
+        "F14",
+        "F17",
+        "F18",
+        "F19",
+        "F20",
+        "F27",
+        "F28",
+        "F29",
+        "F30",
+        "F33",
+        "F34",
+        "F37",
+        "F38",
+        "F39",
+        "F40",
+        "F43"
+      ],
+      "matriz": {
+        "D0": {
+          "S": [],
+          "T": [
+            "NA11"
+          ],
+          "R": [],
+          "I": [
+            "NA11"
+          ],
+          "D": [
+            "NA10"
+          ],
+          "E": []
+        },
+        "D1": {
+          "S": [],
+          "T": [
+            "T-FX3-02"
+          ],
+          "R": [],
+          "I": [
+            "NA7"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "D2": {
+          "S": [],
+          "T": [
+            "NA7"
+          ],
+          "R": [],
+          "I": [
+            "NA7"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "D3": {
+          "S": [],
+          "T": [
+            "T-FX3-02"
+          ],
+          "R": [],
+          "I": [
+            "NA7"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "D4": {
+          "S": [],
+          "T": [
+            "NA7"
+          ],
+          "R": [],
+          "I": [
+            "T-FX3-07"
+          ],
+          "D": [
+            "T-FX3-05"
+          ],
+          "E": []
+        },
+        "D5": {
+          "S": [],
+          "T": [
+            "NA9"
+          ],
+          "R": [
+            "T-FX3-03"
+          ],
+          "I": [
+            "NA9"
+          ],
+          "D": [
+            "NA9"
+          ],
+          "E": []
+        },
+        "E1": {
+          "S": [
+            "NA1"
+          ],
+          "T": [],
+          "R": [
+            "NA1"
+          ],
+          "I": [],
+          "D": [],
+          "E": []
+        },
+        "E2": {
+          "S": [
+            "T-FX3-01"
+          ],
+          "T": [],
+          "R": [
+            "T-FX3-03"
+          ],
+          "I": [],
+          "D": [],
+          "E": []
+        },
+        "P1": {
+          "S": [
+            "T-FX3-01"
+          ],
+          "T": [
+            "NA13"
+          ],
+          "R": [
+            "NA8"
+          ],
+          "I": [
+            "T-FX3-04",
+            "T-FX3-07"
+          ],
+          "D": [
+            "NA10"
+          ],
+          "E": [
+            "NA8"
+          ]
+        },
+        "P4": {
+          "S": [
+            "T-FX3-01"
+          ],
+          "T": [
+            "T-FX3-02"
+          ],
+          "R": [
+            "T-FX3-03"
+          ],
+          "I": [
+            "T-FX3-04",
+            "T-FX3-07"
+          ],
+          "D": [
+            "T-FX3-05"
+          ],
+          "E": [
+            "T-FX3-06"
+          ]
+        },
+        "P6": {
+          "S": [
+            "NA8"
+          ],
+          "T": [
+            "NA7"
+          ],
+          "R": [
+            "NA8"
+          ],
+          "I": [
+            "T-FX3-07"
+          ],
+          "D": [
+            "NA10"
+          ],
+          "E": [
+            "NA8"
+          ]
+        },
+        "F01": {
+          "S": [],
+          "T": [
+            "NA13"
+          ],
+          "R": [],
+          "I": [
+            "NA13"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F02": {
+          "S": [],
+          "T": [
+            "NA13"
+          ],
+          "R": [],
+          "I": [
+            "NA13"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F03": {
+          "S": [],
+          "T": [
+            "NA13"
+          ],
+          "R": [],
+          "I": [
+            "NA13"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F04": {
+          "S": [],
+          "T": [
+            "NA13"
+          ],
+          "R": [],
+          "I": [
+            "NA13"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F13": {
+          "S": [],
+          "T": [
+            "T-FX3-02"
+          ],
+          "R": [],
+          "I": [
+            "NA4"
+          ],
+          "D": [
+            "T-FX3-05"
+          ],
+          "E": []
+        },
+        "F14": {
+          "S": [],
+          "T": [
+            "NA3"
+          ],
+          "R": [],
+          "I": [
+            "T-FX3-04"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F17": {
+          "S": [],
+          "T": [
+            "NA2"
+          ],
+          "R": [],
+          "I": [
+            "NA4"
+          ],
+          "D": [
+            "NA12"
+          ],
+          "E": []
+        },
+        "F18": {
+          "S": [],
+          "T": [
+            "NA3"
+          ],
+          "R": [],
+          "I": [
+            "T-FX3-07"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F19": {
+          "S": [],
+          "T": [
+            "NA11"
+          ],
+          "R": [],
+          "I": [
+            "NA11"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F20": {
+          "S": [],
+          "T": [
+            "NA11"
+          ],
+          "R": [],
+          "I": [
+            "NA11"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F27": {
+          "S": [],
+          "T": [
+            "T-FX3-02"
+          ],
+          "R": [],
+          "I": [
+            "NA4"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F28": {
+          "S": [],
+          "T": [
+            "NA3"
+          ],
+          "R": [],
+          "I": [
+            "NA4"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F29": {
+          "S": [],
+          "T": [
+            "T-FX3-02"
+          ],
+          "R": [],
+          "I": [
+            "NA4"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F30": {
+          "S": [],
+          "T": [
+            "NA3"
+          ],
+          "R": [],
+          "I": [
+            "NA4"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F33": {
+          "S": [],
+          "T": [
+            "NA3"
+          ],
+          "R": [],
+          "I": [
+            "NA4"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F34": {
+          "S": [],
+          "T": [
+            "NA3"
+          ],
+          "R": [],
+          "I": [
+            "NA4"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F37": {
+          "S": [],
+          "T": [
+            "NA3"
+          ],
+          "R": [],
+          "I": [
+            "T-FX3-07"
+          ],
+          "D": [
+            "T-FX3-05"
+          ],
+          "E": []
+        },
+        "F38": {
+          "S": [],
+          "T": [
+            "NA3"
+          ],
+          "R": [],
+          "I": [
+            "NA4"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F39": {
+          "S": [],
+          "T": [
+            "NA3"
+          ],
+          "R": [],
+          "I": [
+            "T-FX3-07"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F40": {
+          "S": [],
+          "T": [
+            "NA3"
+          ],
+          "R": [],
+          "I": [
+            "T-FX3-07"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F43": {
+          "S": [],
+          "T": [
+            "NA9"
+          ],
+          "R": [],
+          "I": [
+            "NA9"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        }
+      }
+    },
+    "FX4": {
+      "nome": "Administração e contabilidade",
+      "responsavel_previsto": "João Victor Rodrigues Santos",
+      "revisor_previsto": "Leonardo Pacheco B Dias",
+      "descricao": "A interface administrativa lista contas e feedbacks e permite moderação. A interface contábil consulta pedidos e envia a alteração de entrega. As duas usam sessão, mas as rotas adotam verificações distintas no servidor. O recorte compara essas diferenças.",
+      "ator_gatilho": "Administrador E3 ao consultar ou moderar e operador E4 ao consultar pedidos ou registrar entrega. Cliente E2 é o papel usado para avaliar solicitações fora da permissão.",
+      "precondicoes": "Sessão válida e autorização administrativa ou contábil conforme a ação. Um pedido existente é necessário para conferir mudança efetiva de estado.",
+      "resultado": "Consultas restritas ao papel e à finalidade. Moderação e transição de entrega com autoria registrada e alteração apenas do recurso autorizado.",
+      "requisicoes": [
+        [
+          "GET /rest/user/authentication-details/ e GET /api/Users",
+          "Código e teste upstream",
+          "user.service.ts usa authentication-details/ para a listagem. GET /api/Users é rota direta alternativa. Extrato A4."
+        ],
+        [
+          "GET /api/Users/:id, GET /api/Feedbacks e DELETE /api/Feedbacks/:id",
+          "Código v20.2.0",
+          "Consulta de detalhe, listagem pública utilizada pela SPA e exclusão. A proteção dessas ações difere."
+        ],
+        [
+          "GET /rest/order-history/orders e PUT /rest/order-history/:id/delivery-status",
+          "Código e teste upstream",
+          "routes/orderHistory.ts e teste order-history.test.ts. O projeto prevê accounting autorizado e customer/admin recusados."
+        ]
+      ],
+      "dados": [
+        [
+          "E-mail, ID, papel e metadados de sessão",
+          "Dado pessoal quando identificável, papel interno",
+          "F15, F16, D1 e D2",
+          "Confidencialidade"
+        ],
+        [
+          "Feedback, nota e vínculo de autoria",
+          "Público na exibição autorizada e dado pessoal se identificável",
+          "F16, F31, F32 e D1",
+          "Integridade"
+        ],
+        [
+          "Pedido, referências e status de entrega",
+          "Dado pessoal quando vinculável e estado interno",
+          "F15, F16, D3, F35 e F36",
+          "Integridade"
+        ],
+        [
+          "Token de administrador ou de contabilidade",
+          "Credencial ou segredo",
+          "D0 e F15",
+          "Confidencialidade"
+        ],
+        [
+          "Metadados da operação",
+          "Interno e dado pessoal quando vinculável",
+          "F44 e D5",
+          "Integridade"
+        ]
+      ],
+      "controles": [
+        [
+          "Guarda de rota Angular",
+          "P1",
+          "app.guard.ts e configuração de rotas. Controla navegação na interface."
+        ],
+        [
+          "Autenticação nas listagens de contas e na exclusão de feedback",
+          "P5 e F15",
+          "server.ts. As rotas listadas usam isAuthorized."
+        ],
+        [
+          "Filtro de papel na contabilidade",
+          "P5 e F15",
+          "isAccounting em lib/insecurity.ts. Teste upstream documenta permissões esperadas."
+        ],
+        [
+          "Mascaramento ou exclusão de segredos",
+          "P5 e F16",
+          "routes/authenticatedUsers.ts e configuração de User no server.ts."
+        ]
+      ],
+      "questionario": {
+        "Q1": "FX4 dá acesso a conjuntos de dados e ações que não pertencem ao comprador comum. Uma falha em P5 pode transformar uma sessão de cliente em capacidade de consultar contas ou remover feedbacks.",
+        "Q2": "E3 é o papel previsto para administração. E4 é o papel exigido para consulta contábil e entrega. No código, admin não implica accounting. E2 representa o usuário que tenta chamar diretamente uma rota fora da sua permissão.",
+        "Q3": "F05 ou F07 aciona P1. F15 e F16 levam JWT, IDs, comandos e listas via HTTP e JSON. P5 consulta D1 por F31 e F32, D2 por F45 e F46 e D3 por F35 e F36. F44 envia metadados a D5.",
+        "Q4": "F15 e F16 cruzam TB-01 e TB-02 e precisam de autorização na API. F31, F32, F35, F36, F44, F45 e F46 cruzam TB-03, onde o acesso se converte em consulta ou gravação de alcance coletivo.",
+        "Q5": "F16 pode conter dados de identificação, feedback e pedidos. O JWT é credencial. D1 guarda conta e feedback, D2 conserva o mapa de sessão e D3 o pedido e entrega. Não se identificou categoria sensível por definição legal no esquema examinado.",
+        "Q6": "As telas usam fragmentos Angular e chamam rotas HTTP independentes. Cabeçalho Authorization, IDs de feedback e pedido e campo deliveryStatus são entradas. As rotas privilegiadas compõem superfície administrativa mesmo quando a SPA esconde a navegação.",
+        "Q7": "A SPA tem guardas por papel. O servidor usa isAccounting nas rotas contábeis. As rotas de listagem de usuários e exclusão de feedback verificam JWT, sem o mesmo teste de papel. As listagens filtram ou mascaram alguns campos.",
+        "S1": "P5 verifica o token nas rotas protegidas. A contabilidade usa assinatura e claim de papel. As consultas a D1, D2 e D3 usam permissões do próprio processo.",
+        "S2": "O JWT vem de FX1 e o interceptor o envia em F15. isAccounting chama o verificador de assinatura e lê o papel do token. Não se identificou consulta ao papel atual ou invalidação no percurso estudado.",
+        "S3": "T-FX4-01 trata sessão antiga de E4 após mudança de acesso. T-FX1-06 é uma dependência compartilhada quando a confiança no emissor é quebrada.",
+        "T1": "O cliente pode modificar o campo deliveryStatus e IDs antes de F15. A alteração de D3 é executada em P5 e a exclusão de feedback muda D1.",
+        "T2": "A contabilidade verifica accounting, mas calcula o novo estado pela inversão do valor no corpo sem comparar o estado persistido. A exclusão de feedback requer autorização de função além de identificação do item.",
+        "T3": "O JWT assinado protege claims contra edição quando o verificador e a chave são confiáveis. O comando HTTP não tem assinatura própria e o fluxo usa HTTP local. A integridade de entrega depende da validação de transição.",
+        "R1": "F44 registra a requisição HTTP. Não se identificou trilha específica associando o ator validado à exclusão, ao documento de pedido e ao estado anterior e posterior.",
+        "R2": "D5 é local com rotação. Não se identificaram garantias de integridade da trilha nem proteção contra alteração por conta com acesso ao arquivo.",
+        "R3": "Um administrador ou contador pode negar autoria de ação em T-FX4-03 se a trilha não correlacionar identidade, alvo, ação e resultado.",
+        "I1": "A listagem em F16 devolve dados de várias contas. authentication-details mascara password e totpSecret, mas espalha os demais campos do modelo. GET /api/Users exclui esses segredos, sem exigir admin.",
+        "I2": "O painel precisa de um conjunto restrito de campos para identificar a conta e seu estado. Respostas amplas e pedidos completos aumentam a exposição sem finalidade demonstrada para cada campo.",
+        "I3": "O transporte no laboratório é HTTP. Os campos mascarados oferecem redução pontual e não protegem a resposta inteira. A configuração examinada não demonstrou criptografia de D1 ou D5 em repouso.",
+        "D1": "Listas amplas ocupam memória e CPU para consulta e serialização. A consulta da coleção de pedidos usa find() e reverse() no caminho analisado.",
+        "D2": "Os trechos de listagem não implementam paginação no servidor para as chamadas estudadas. A tabela da SPA pode paginar após receber toda a lista. As hipóteses de saturação ficaram sem medição.",
+        "D3": "O recorte usa API, SQLite, mapa em memória e MarsDB locais. O tratamento de falhas em integrações externas não foi analisado em FX4.",
+        "E1": "A API contábil verifica papel no servidor. AdminGuard protege navegação, e isAuthorized valida autenticação nas ações administrativas examinadas. Cada operação precisa de permissão de função e, quando aplicável, de recurso.",
+        "E2": "Em análise estática, uma conta comum pode tentar acessar dados de usuários e remover feedback por chamadas diretas. T-FX4-04 e T-FX4-06 descrevem o efeito e o teste proposto, sem confirmação local na M1.",
+        "E3": "A identidade do contêiner é compartilhada e não substitui a separação de deveres entre E3 e E4. As permissões devem ser específicas para consultar contas, moderar e alterar entrega.",
+        "V1": "T-FX4-04 tem média 8,6, pois a listagem pode expor dados de várias contas em uma chamada. T-FX4-06 tem média 8,2 e envolve uma mudança indevida de estado.",
+        "V2": "Não houve achado confirmado na M1 diretamente neste fluxo. V1, V2 e V6 ajudam a explicar dependências do token, mas não provam os efeitos específicos em P5.",
+        "V3": "A validação proposta cruza os papéis customer, deluxe, admin e accounting em cada rota. Restam verificar rebaixamento de conta, mudança concorrente de entrega e disponibilidade com coleções crescentes."
+      },
+      "conclusao": [
+        "A diferença entre as guardas administrativas e contábeis mostra onde colocar o controle. O servidor deve definir permissões de leitura de contas e moderação e verificar ambas nas rotas correspondentes. O papel contábil precisa de estado de sessão atualizado e validação de transição de entrega.",
+        "O risco residual inclui abuso por operador autorizado e inconsistência em escritas concorrentes. Auditoria protegida, segregação de funções e atualização condicional reduzem esses efeitos e permitem investigar incidentes."
+      ],
+      "elementos": [
+        "D0",
+        "D1",
+        "D2",
+        "D3",
+        "D5",
+        "E2",
+        "E3",
+        "E4",
+        "P1",
+        "P5",
+        "F03",
+        "F04",
+        "F05",
+        "F06",
+        "F07",
+        "F08",
+        "F15",
+        "F16",
+        "F19",
+        "F20",
+        "F31",
+        "F32",
+        "F35",
+        "F36",
+        "F44",
+        "F45",
+        "F46"
+      ],
+      "arestas": [
+        "F03",
+        "F04",
+        "F05",
+        "F06",
+        "F07",
+        "F08",
+        "F15",
+        "F16",
+        "F19",
+        "F20",
+        "F31",
+        "F32",
+        "F35",
+        "F36",
+        "F44",
+        "F45",
+        "F46"
+      ],
+      "matriz": {
+        "D0": {
+          "S": [],
+          "T": [
+            "NA11"
+          ],
+          "R": [],
+          "I": [
+            "NA11"
+          ],
+          "D": [
+            "NA10"
+          ],
+          "E": []
+        },
+        "D1": {
+          "S": [],
+          "T": [
+            "NA7"
+          ],
+          "R": [],
+          "I": [
+            "NA7"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "D2": {
+          "S": [],
+          "T": [
+            "NA7"
+          ],
+          "R": [],
+          "I": [
+            "NA7"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "D3": {
+          "S": [],
+          "T": [
+            "T-FX4-02"
+          ],
+          "R": [],
+          "I": [
+            "NA7"
+          ],
+          "D": [
+            "T-FX4-05"
+          ],
+          "E": []
+        },
+        "D5": {
+          "S": [],
+          "T": [
+            "NA9"
+          ],
+          "R": [
+            "T-FX4-03"
+          ],
+          "I": [
+            "NA9"
+          ],
+          "D": [
+            "NA9"
+          ],
+          "E": []
+        },
+        "E2": {
+          "S": [
+            "NA1"
+          ],
+          "T": [],
+          "R": [
+            "NA1"
+          ],
+          "I": [],
+          "D": [],
+          "E": []
+        },
+        "E3": {
+          "S": [
+            "NA1"
+          ],
+          "T": [],
+          "R": [
+            "T-FX4-03"
+          ],
+          "I": [],
+          "D": [],
+          "E": []
+        },
+        "E4": {
+          "S": [
+            "T-FX4-01"
+          ],
+          "T": [],
+          "R": [
+            "T-FX4-03"
+          ],
+          "I": [],
+          "D": [],
+          "E": []
+        },
+        "P1": {
+          "S": [
+            "T-FX4-01"
+          ],
+          "T": [
+            "NA13"
+          ],
+          "R": [
+            "NA8"
+          ],
+          "I": [
+            "T-FX4-04"
+          ],
+          "D": [
+            "NA10"
+          ],
+          "E": [
+            "NA8"
+          ]
+        },
+        "P5": {
+          "S": [
+            "T-FX4-01"
+          ],
+          "T": [
+            "T-FX4-02"
+          ],
+          "R": [
+            "T-FX4-03"
+          ],
+          "I": [
+            "T-FX4-04"
+          ],
+          "D": [
+            "T-FX4-05"
+          ],
+          "E": [
+            "T-FX4-06"
+          ]
+        },
+        "F03": {
+          "S": [],
+          "T": [
+            "NA13"
+          ],
+          "R": [],
+          "I": [
+            "NA13"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F04": {
+          "S": [],
+          "T": [
+            "NA13"
+          ],
+          "R": [],
+          "I": [
+            "NA13"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F05": {
+          "S": [],
+          "T": [
+            "NA13"
+          ],
+          "R": [],
+          "I": [
+            "NA13"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F06": {
+          "S": [],
+          "T": [
+            "NA13"
+          ],
+          "R": [],
+          "I": [
+            "NA13"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F07": {
+          "S": [],
+          "T": [
+            "NA13"
+          ],
+          "R": [],
+          "I": [
+            "NA13"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F08": {
+          "S": [],
+          "T": [
+            "NA13"
+          ],
+          "R": [],
+          "I": [
+            "NA13"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F15": {
+          "S": [],
+          "T": [
+            "T-FX4-02"
+          ],
+          "R": [],
+          "I": [
+            "NA4"
+          ],
+          "D": [
+            "T-FX4-05"
+          ],
+          "E": []
+        },
+        "F16": {
+          "S": [],
+          "T": [
+            "NA3"
+          ],
+          "R": [],
+          "I": [
+            "T-FX4-04"
+          ],
+          "D": [
+            "T-FX4-05"
+          ],
+          "E": []
+        },
+        "F19": {
+          "S": [],
+          "T": [
+            "NA11"
+          ],
+          "R": [],
+          "I": [
+            "NA11"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F20": {
+          "S": [],
+          "T": [
+            "NA11"
+          ],
+          "R": [],
+          "I": [
+            "NA11"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F31": {
+          "S": [],
+          "T": [
+            "NA3"
+          ],
+          "R": [],
+          "I": [
+            "NA4"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F32": {
+          "S": [],
+          "T": [
+            "NA3"
+          ],
+          "R": [],
+          "I": [
+            "T-FX4-04"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F35": {
+          "S": [],
+          "T": [
+            "T-FX4-02"
+          ],
+          "R": [],
+          "I": [
+            "NA4"
+          ],
+          "D": [
+            "T-FX4-05"
+          ],
+          "E": []
+        },
+        "F36": {
+          "S": [],
+          "T": [
+            "NA3"
+          ],
+          "R": [],
+          "I": [
+            "NA4"
+          ],
+          "D": [
+            "T-FX4-05"
+          ],
+          "E": []
+        },
+        "F44": {
+          "S": [],
+          "T": [
+            "NA9"
+          ],
+          "R": [],
+          "I": [
+            "NA9"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F45": {
+          "S": [],
+          "T": [
+            "NA3"
+          ],
+          "R": [],
+          "I": [
+            "NA4"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        },
+        "F46": {
+          "S": [],
+          "T": [
+            "NA3"
+          ],
+          "R": [],
+          "I": [
+            "T-FX4-04"
+          ],
+          "D": [
+            "NA6"
+          ],
+          "E": []
+        }
+      }
+    }
+  },
+  "stride": {
+    "S": "Autenticidade",
+    "T": "Integridade",
+    "R": "Não repúdio",
+    "I": "Confidencialidade",
+    "D": "Disponibilidade",
+    "E": "Autorização"
+  },
+  "regras_stride": {
+    "Entidade externa": "SR",
+    "Processo": "STRIDE",
+    "Armazenamento": "TID",
+    "Fluxo": "TID"
+  },
+  "justificativas_na": {
+    "NA1": "S e R em entidade ou interface. Ações públicas ou de interface, sem afirmação de identidade ou autoria adicional. Para ações autenticadas, a prova e a auditoria ficam no processo servidor e em D5.",
+    "NA2": "T em ação ou requisição. O remetente já controla a entrada. A adulteração com efeito no ativo foi examinada no processo de destino, ou a entrada é apenas consulta sem mudança de estado.",
+    "NA3": "T em resposta ou conexão interna. A alteração independente da mensagem exigiria controle de host, bridge, arquivo ou memória. O efeito das entradas manipuláveis é tratado no processo e nas escritas associadas.",
+    "NA4": "I em requisição ou troca interna. Acesso direto ao transporte local, memória ou arquivo exigiria a condição excluída de comprometimento do host. Exposições mediadas pela resposta da API foram examinadas no processo e no fluxo de saída.",
+    "NA5": "I em tela ou resposta. Os dados em análise são públicos ou próprios da finalidade daquela saída. O retorno indevido identificável está vinculado à ameaça da API correspondente.",
+    "NA6": "D em tela, saída ou operação interna. O segmento não oferece entrada de carga independente. O custo é analisado na requisição e no processo que aciona a leitura, a gravação ou a resposta.",
+    "NA7": "T ou I em armazenamento. O componente é local e sem interface direta para o agente do fluxo. Alterações e acessos mediados pela aplicação são examinados nos processos que o utilizam.",
+    "NA8": "S, R ou E em processo. A ação específica é pública ou apenas repassa entrada, sem afirmar identidade, guardar prova de autoria ou decidir permissão naquele ponto. A decisão aplicável é examinada no processo servidor, com dependência do FX1.",
+    "NA9": "T, I ou D em logs. Este fluxo não fornece comando de leitura, alteração ou remoção direta em D5. A exposição identificada por dados em URL é tratada no FX2. Retenção e possibilidade de contestação são examinadas em R.",
+    "NA10": "D em processo ou estado do navegador. Uma falha restrita ao cliente afeta a sua própria sessão. Saturação da instância é analisada no servidor. Em P6, os cenários volumétricos de download estão fora do recorte.",
+    "NA11": "T ou I no estado local do navegador. Alterar a cópia local ou ler o próprio armazenamento não modifica o dado autorizado no servidor. Uso de token alheio ou excessos no conteúdo são avaliados na emissão ou na rota consumidora.",
+    "NA12": "D em entrada sem operação custosa própria neste recorte. O custo das entradas HTTP está associado ao processo e à rota de maior consumo selecionada no fluxo.",
+    "NA13": "T ou I em interface cliente. A transferência na interface representa ações do ator no próprio navegador. O efeito de entrada manipulada ou resposta indevida é avaliado na correspondente chamada HTTP."
+  },
+  "ameacas": [
+    {
+      "id": "T-FX1-01",
+      "fluxo": "FX1",
+      "titulo": "Tentativas repetidas no login",
+      "stride": "S",
+      "propriedade": "Autenticidade",
+      "elementos": [
+        "P2",
+        "E1"
+      ],
+      "cwe": [
+        "307"
+      ],
+      "owasp_top10_2021": "A07",
+      "status": "Confirmada no T1",
+      "evidencia": "V6. HTTP 401 nas 15 tentativas incorretas e HTTP 200 no login correto em seguida.",
+      "cenario": "Um visitante E1 pode repetir palpites de senha em P2 pelo fluxo F09, explorando a ausência de contenção efetiva na sequência observada. Se acertar uma senha fraca, passa a se apresentar como o titular da conta.",
+      "controle_existente": "A mensagem de credenciais inválidas retorna HTTP 401. A amostra de V6 permaneceu sem bloqueio.",
+      "notas": [
+        8,
+        8,
+        9,
+        7,
+        8
+      ],
+      "justificativas": [
+        "Uma senha acertada abre acesso a dados e ações da conta.",
+        "A sequência de falhas foi reproduzida no T1.",
+        "Uma requisição repetida ao login dispensa sessão prévia.",
+        "Contas com senhas previsíveis são as mais expostas.",
+        "O formulário e a rota de autenticação são públicos."
+      ],
+      "tipo_camada": "Preventivo e detectivo / aplicação",
+      "asvs_5_0_0": [
+        "6.1.1",
+        "6.3.1"
+      ],
+      "cheat_sheet": "AUTH",
+      "lgpd_art46": true,
+      "mitigacao": "Aplicar atraso progressivo por conta e origem, registrar tentativas distribuídas e exigir segundo fator nas contas privilegiadas. Evitar bloqueio permanente imposto por terceiros.",
+      "criterio_aceite": "Em conta de teste, a série configurada deve acionar atraso ou contenção. Uma segunda conta legítima deve continuar acessível.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX1-02",
+      "fluxo": "FX1",
+      "titulo": "Injeção SQL na autenticação",
+      "stride": "T",
+      "propriedade": "Integridade",
+      "elementos": [
+        "P2",
+        "F09",
+        "F21"
+      ],
+      "cwe": [
+        "89"
+      ],
+      "owasp_top10_2021": "A03",
+      "status": "Confirmada no T1",
+      "evidencia": "V1. A M1 registrou bypass do login administrativo e confirmação booleana pelo sqlmap.",
+      "cenario": "Um visitante E1 pode alterar a lógica da consulta de autenticação em P2 e F21 enviando entrada controlada em F09. A concatenação do e-mail ao SQL permite ignorar o predicado de senha e iniciar uma sessão administrativa, com acesso a dados e ações reservadas.",
+      "controle_existente": "A aplicação calcula hash da senha e filtra contas apagadas. O e-mail continua interpolado na consulta SQL.",
+      "notas": [
+        10,
+        10,
+        10,
+        10,
+        9
+      ],
+      "justificativas": [
+        "O bypass administrativo pode atingir dados de vários titulares e funções privilegiadas.",
+        "O T1 preservou requisição e resposta do bypass.",
+        "O caminho observado exige apenas acesso anônimo à rota e um cliente HTTP.",
+        "O papel obtido permite alcançar operações com alcance coletivo.",
+        "A rota é pública e a consulta vulnerável consta do código."
+      ],
+      "tipo_camada": "Preventivo / aplicação e dados",
+      "asvs_5_0_0": [
+        "1.2.4"
+      ],
+      "cheat_sheet": "SQLI",
+      "lgpd_art46": true,
+      "mitigacao": "Buscar a conta por e-mail com parâmetros vinculados e verificar a senha em operação separada. Aplicar a mesma regra a entradas do login e manter validação de tipo e tamanho.",
+      "criterio_aceite": "A entrada usada em V1 deve receber falha genérica de autenticação, sem JWT. O login com credenciais válidas deve continuar funcionando.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX1-03",
+      "fluxo": "FX1",
+      "titulo": "Atribuição incompleta de logins",
+      "stride": "R",
+      "propriedade": "Não repúdio",
+      "elementos": [
+        "D5",
+        "P2",
+        "E1",
+        "E2"
+      ],
+      "cwe": [
+        "778"
+      ],
+      "owasp_top10_2021": "A09",
+      "status": "Plausível",
+      "evidencia": "server.ts, middleware Morgan. O formato HTTP combinado não carrega o identificador autenticado emitido no evento.",
+      "cenario": "Um agente que obtenha uma sessão em P2 pode negar a autoria da autenticação ou atribuí-la a outra pessoa. Em F41 e D5, o log de acesso com origem e horário permite ver a chamada, mas não associa de forma inequívoca tentativa, conta, sessão e resultado.",
+      "controle_existente": "O registro HTTP documenta requisição, origem aparente, horário, status e agente de usuário.",
+      "notas": [
+        6,
+        7,
+        7,
+        6,
+        6
+      ],
+      "justificativas": [
+        "A deficiência retarda resposta e investigação de contas comprometidas.",
+        "A estrutura do log é fixa e se repete em cada chamada.",
+        "A disputa exige um acesso ou tentativa seguida de investigação.",
+        "Cada evento sem correlação pode afetar um titular.",
+        "É preciso conhecer o formato dos registros ou investigá-los."
+      ],
+      "tipo_camada": "Detectivo / aplicação e processo",
+      "asvs_5_0_0": [
+        "16.2.1",
+        "16.3.1",
+        "16.4.2"
+      ],
+      "cheat_sheet": "LOG",
+      "lgpd_art46": true,
+      "mitigacao": "Emitir evento estruturado para sucesso, falha e encerramento. Correlacionar ID interno, horário, origem validada, resultado e referência de sessão sem gravar senha ou token integral. Enviar a destino separado.",
+      "criterio_aceite": "Verificar três eventos correlacionados no destino e confirmar que o serviço de loja não pode alterar entradas já gravadas.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX1-04",
+      "fluxo": "FX1",
+      "titulo": "Hash de senha no JWT",
+      "stride": "I",
+      "propriedade": "Confidencialidade",
+      "elementos": [
+        "F10",
+        "P1",
+        "P2",
+        "D0",
+        "D2",
+        "F19",
+        "F20"
+      ],
+      "cwe": [
+        "522",
+        "916"
+      ],
+      "owasp_top10_2021": "A02",
+      "status": "Confirmada no T1",
+      "evidencia": "V2. JWT de conta de teste decodificado com campo password e resumo MD5 conferido.",
+      "cenario": "Um agente com acesso a um token de F10 ou D0 pode ler o campo password do perfil serializado no JWT. O token assinado contém o hash MD5 sem sal da senha, permitindo tentativa de recuperação offline e eventual acesso indevido à conta do titular.",
+      "controle_existente": "A assinatura RS256 protege a integridade do token. O campo password está incluído no objeto serializado.",
+      "notas": [
+        8,
+        10,
+        8,
+        8,
+        9
+      ],
+      "justificativas": [
+        "O resumo exposto permite testar senhas sem passar pelo servidor.",
+        "O T1 confirmou a presença do campo com uma conta própria.",
+        "Ler o payload exige o token, e a busca de senha depende da sua força.",
+        "A mesma estrutura do JWT é usada em diferentes contas.",
+        "Os campos do JWT são visíveis por decodificação Base64url."
+      ],
+      "tipo_camada": "Preventivo e corretivo / aplicação e dados",
+      "asvs_5_0_0": [
+        "14.1.1",
+        "14.2.6",
+        "11.4.1"
+      ],
+      "cheat_sheet": "PASS",
+      "lgpd_art46": true,
+      "mitigacao": "Emitir JWT com um conjunto explícito de claims, sem o modelo de usuário. Migrar MD5 para Argon2id com sal único e custo calibrado, invalidar os tokens antigos e redefinir credenciais expostas quando aplicável.",
+      "criterio_aceite": "Inspecionar JWT, login e whoami com fields. Nenhuma resposta deve incluir hash, segredo TOTP ou outros campos reservados.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX1-05",
+      "fluxo": "FX1",
+      "titulo": "Exaustão de sessões e autenticação",
+      "stride": "D",
+      "propriedade": "Disponibilidade",
+      "elementos": [
+        "D2",
+        "P2",
+        "F09",
+        "F23"
+      ],
+      "cwe": [
+        "400"
+      ],
+      "owasp_top10_2021": "A04",
+      "status": "Plausível",
+      "evidencia": "routes/login.ts e lib/insecurity.ts. O mapa em memória é preenchido em login e o caminho de emissão não define limite por conta.",
+      "cenario": "Um cliente com credenciais válidas pode emitir sessões repetidamente em P2 e alimentar D2 explorando a falta de limite explícito de entradas e expurgo no mapa. Com volume suficiente, o processo pode degradar a autenticação e o atendimento das demais rotas.",
+      "controle_existente": "O analisador de corpo limita o tamanho por requisição. O código do mapa não documenta TTL nem capacidade.",
+      "notas": [
+        7,
+        6,
+        7,
+        8,
+        6
+      ],
+      "justificativas": [
+        "O processo de autenticação é compartilhado com a loja.",
+        "A taxa e a duração necessárias para degradação dependem dos recursos locais.",
+        "Uma conta válida basta para gerar novas entradas ao longo do tempo.",
+        "A saturação do Node.js pode afetar todas as contas na instância.",
+        "O crescimento do mapa exige inspeção de código ou instrumentação."
+      ],
+      "tipo_camada": "Preventivo e detectivo / aplicação",
+      "asvs_5_0_0": [
+        "2.4.1",
+        "7.1.2"
+      ],
+      "cheat_sheet": "SESS",
+      "lgpd_art46": true,
+      "mitigacao": "Limitar sessões por conta, expurgar entradas expiradas, limitar taxa de login por conta e origem e medir uso do mapa e latência da rota.",
+      "criterio_aceite": "Teste local com carga limitada deve demonstrar memória estabilizada, expurgo das entradas e atendimento das chamadas legítimas.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX1-06",
+      "fluxo": "FX1",
+      "titulo": "Chave de assinatura distribuída",
+      "stride": "E",
+      "propriedade": "Autorização",
+      "elementos": [
+        "P2"
+      ],
+      "cwe": [
+        "321"
+      ],
+      "owasp_top10_2021": "A02",
+      "status": "Plausível",
+      "evidencia": "lib/insecurity.ts contém material de assinatura fixo da demonstração. A verificação no laboratório foi documental.",
+      "cenario": "Um agente com acesso ao código da versão pode tentar apresentar um JWT privilegiado às rotas que confiam na chave de P2. A chave privada embutida compromete a separação entre emissor e cliente e pode permitir que o agente se atribua um papel reservado.",
+      "controle_existente": "O middleware verifica a assinatura em rotas protegidas. O material de assinatura está na distribuição do laboratório.",
+      "notas": [
+        10,
+        7,
+        8,
+        9,
+        8
+      ],
+      "justificativas": [
+        "Um JWT aceito com papel privilegiado afeta operações administrativas.",
+        "O efeito depende das verificações específicas da rota e não foi ensaiado no T1.",
+        "O agente precisa conhecer a estrutura do token e produzir assinatura compatível.",
+        "A chave é compartilhada entre contas da instância de demonstração.",
+        "O material está presente no código versionado."
+      ],
+      "tipo_camada": "Preventivo e corretivo / aplicação e operação",
+      "asvs_5_0_0": [
+        "9.1.2",
+        "13.3.1",
+        "13.3.4"
+      ],
+      "cheat_sheet": "SECRETS",
+      "lgpd_art46": true,
+      "mitigacao": "Provisionar chave exclusiva por implantação em gestor de segredos, rotacionar o material, revogar tokens antigos e fixar algoritmo, emissor, audiência, tipo e expiração no verificador.",
+      "criterio_aceite": "Tokens com chave antiga, algoritmo inesperado ou claims inválidas devem ser recusados. O repositório e a imagem não devem conter chave privada ativa.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX2-01",
+      "fluxo": "FX2",
+      "titulo": "Tomada de conta por resposta previsível",
+      "stride": "S",
+      "propriedade": "Autenticidade",
+      "elementos": [
+        "P3",
+        "E1"
+      ],
+      "cwe": [
+        "640"
+      ],
+      "owasp_top10_2021": "A04",
+      "status": "Confirmada no T1",
+      "evidencia": "V7. Resposta previsível aceita na quinta tentativa e login posterior com a nova senha.",
+      "cenario": "Um visitante E1 pode redefinir a senha de uma conta em P3 por F11 se adivinhar sua resposta de segurança. A recuperação baseada em conhecimento previsível aceita o palpite correto dentro da janela observada, permitindo assumir a conta sem a senha anterior.",
+      "controle_existente": "Há comparação HMAC e limitador de 100 requisições em cinco minutos. Cinco solicitações chegaram ao mecanismo de reset.",
+      "notas": [
+        9,
+        9,
+        9,
+        8,
+        9
+      ],
+      "justificativas": [
+        "A senha alterada concede acesso aos dados do titular e pode impedir seu login.",
+        "O T1 repetiu a tentativa até o quinto palpite e confirmou o acesso.",
+        "A rota pública exige e-mail e resposta adivinhável, sem sessão inicial.",
+        "O efeito direto é por conta, mas o mecanismo é comum a todas.",
+        "O formulário revela a pergunta associada e facilita a seleção dos palpites."
+      ],
+      "tipo_camada": "Preventivo e corretivo / aplicação",
+      "asvs_5_0_0": [
+        "6.4.2",
+        "6.4.3",
+        "7.4.3"
+      ],
+      "cheat_sheet": "RESET",
+      "lgpd_art46": true,
+      "mitigacao": "Substituir a pergunta por recuperação com token aleatório de uso único, vida curta e vínculo ao titular por canal verificado, preservando MFA quando ativo. Notificar a troca e encerrar sessões antigas segundo política.",
+      "criterio_aceite": "Token expirado, já usado ou de outra conta deve falhar. A resposta de recuperação não deve identificar se o e-mail está cadastrado.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX2-02",
+      "fluxo": "FX2",
+      "titulo": "Associação indevida de resposta de segurança",
+      "stride": "T",
+      "propriedade": "Integridade",
+      "elementos": [
+        "P3",
+        "F11",
+        "F25",
+        "D1"
+      ],
+      "cwe": [
+        "639",
+        "862"
+      ],
+      "owasp_top10_2021": "A01",
+      "status": "Plausível",
+      "evidencia": "server.ts, models/securityAnswer.ts e register.component.ts. V7 registrou UserId nulo sem associação e HTTP 400 para sobrescrita já existente.",
+      "cenario": "Um visitante E1 pode tentar vincular uma resposta própria a uma conta ainda sem associação em P3 e D1. O POST separado carrega o UserId fornecido pelo cliente. Se o servidor aceitar um ID alheio elegível, o agente passa a controlar o dado usado na recuperação dessa conta.",
+      "controle_existente": "UserId é único em D1. A M1 obteve HTTP 400 ao tentar registrar segunda resposta para a mesma conta.",
+      "notas": [
+        8,
+        6,
+        7,
+        5,
+        7
+      ],
+      "justificativas": [
+        "A associação indevida pode preparar a tomada da conta ainda sem resposta.",
+        "É necessária uma conta alvo sem registro e o caso não foi reproduzido.",
+        "A chamada é simples, mas exige conhecer um ID elegível.",
+        "A janela restringe o ataque a contas com configuração incompleta.",
+        "O campo UserId é exposto pelo contrato e pela implementação da interface."
+      ],
+      "tipo_camada": "Preventivo / aplicação e dados",
+      "asvs_5_0_0": [
+        "2.3.1",
+        "2.3.3",
+        "8.2.2"
+      ],
+      "cheat_sheet": "AUTHZ",
+      "lgpd_art46": true,
+      "mitigacao": "Durante a migração, acoplar criação da conta e associação em transação única com o ID gerado no servidor. Remover a gravação pública isolada quando o novo reset entrar em serviço.",
+      "criterio_aceite": "Um cliente não deve conseguir associar resposta a ID indicado por ele. A criação incompleta deve ser revertida sem deixar conta apta a recuperação indevida.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX2-03",
+      "fluxo": "FX2",
+      "titulo": "Contestação de redefinição de senha",
+      "stride": "R",
+      "propriedade": "Não repúdio",
+      "elementos": [
+        "D5",
+        "P3",
+        "E1"
+      ],
+      "cwe": [
+        "778"
+      ],
+      "owasp_top10_2021": "A09",
+      "status": "Plausível",
+      "evidencia": "routes/resetPassword.ts e server.ts. A resposta do reset e o log HTTP não identificam quem apresentou o conhecimento secreto.",
+      "cenario": "Um agente que solicite reset em P3 pode negar sua participação após trocar a senha de outra pessoa. Em F42 e D5, método, status e endereço de origem não estabelecem o vínculo entre a operação, o titular, a prova de recuperação e a alteração de estado.",
+      "controle_existente": "Há log HTTP diário. A prova da recuperação depende do conhecimento da resposta.",
+      "notas": [
+        7,
+        7,
+        7,
+        6,
+        6
+      ],
+      "justificativas": [
+        "Uma disputa de conta pode exigir investigação e reversão sem trilha suficiente.",
+        "O registro genérico é o mesmo mecanismo para todos os resets.",
+        "Uma redefinição anônima fornece pouco material para atribuição individual.",
+        "Os atingidos são principalmente titulares que sofreram reset indevido.",
+        "A lacuna aparece ao comparar a rota com o conteúdo do log."
+      ],
+      "tipo_camada": "Detectivo e corretivo / aplicação e processo",
+      "asvs_5_0_0": [
+        "16.2.1",
+        "16.2.5",
+        "16.4.2"
+      ],
+      "cheat_sheet": "LOG",
+      "lgpd_art46": true,
+      "mitigacao": "Correlacionar abertura, consumo e falhas de recuperação a ID opaco, horário, origem e resultado. Proteger a trilha contra alteração e notificar o canal já cadastrado.",
+      "criterio_aceite": "Uma operação de teste deve gerar eventos correlacionáveis e uma notificação, sem persistir resposta, nova senha ou token recuperável no log.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX2-04",
+      "fluxo": "FX2",
+      "titulo": "Divulgação da pergunta vinculada ao e-mail",
+      "stride": "I",
+      "propriedade": "Confidencialidade",
+      "elementos": [
+        "F12",
+        "P3",
+        "P1",
+        "F42"
+      ],
+      "cwe": [
+        "203",
+        "598"
+      ],
+      "owasp_top10_2021": "A07",
+      "status": "Confirmada no T1",
+      "evidencia": "V7. Consulta anônima retornou a pergunta associada. routes/securityQuestion.ts distingue resposta com pergunta e objeto vazio.",
+      "cenario": "Um visitante E1 pode consultar P3 com um e-mail e obter em F12 a pergunta vinculada, explorando a diferença de resposta do endpoint. Isso revela uma associação de recuperação e fornece contexto para atacar a conta. O e-mail em query string também pode aparecer em F42.",
+      "controle_existente": "A rota não devolve a resposta de segurança. A pergunta associada é visível sem autenticação.",
+      "notas": [
+        5,
+        9,
+        9,
+        7,
+        8
+      ],
+      "justificativas": [
+        "O retorno revela associação e tema da pergunta, sem entregar a resposta secreta.",
+        "O retorno da pergunta foi capturado na M1.",
+        "A consulta é anônima e requer apenas um e-mail candidato.",
+        "A operação se repete para contas com pergunta associada.",
+        "O formulário usa o endpoint e o contraste de saída consta do código."
+      ],
+      "tipo_camada": "Preventivo / aplicação e processo",
+      "asvs_5_0_0": [
+        "6.3.8",
+        "14.2.1",
+        "16.2.5"
+      ],
+      "cheat_sheet": "RESET",
+      "lgpd_art46": true,
+      "mitigacao": "Retirar a consulta pública da pergunta. Receber solicitação de recuperação no corpo, responder com status, conteúdo e tempo comparáveis. Omitir hashes da resposta do reset e excluir e-mails desnecessários dos logs de acesso.",
+      "criterio_aceite": "Em amostra local, e-mails cadastrados e não cadastrados devem receber resposta equivalente, com variação temporal compatível. A resposta do reset deve omitir o hash e o log deve omitir o identificador bruto.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX2-05",
+      "fluxo": "FX2",
+      "titulo": "Consumo de recursos por cadastros automatizados",
+      "stride": "D",
+      "propriedade": "Disponibilidade",
+      "elementos": [
+        "P3",
+        "D1",
+        "F11",
+        "F25"
+      ],
+      "cwe": [
+        "400"
+      ],
+      "owasp_top10_2021": "A04",
+      "status": "Plausível",
+      "evidencia": "server.ts e fluxo do cadastro. Criação de usuário e carteira, com resposta de segurança em operação separada.",
+      "cenario": "Um visitante E1 pode submeter cadastros em sequência para P3 e acumular registros em D1. A criação pública de conta e carteira sem orçamento específico identificado pode ocupar escrita no SQLite, CPU e disco, degradando cadastro e recuperação.",
+      "controle_existente": "A unicidade do e-mail impede duplicata da mesma conta. O limitador de reset não cobre o cadastro.",
+      "notas": [
+        6,
+        7,
+        8,
+        7,
+        7
+      ],
+      "justificativas": [
+        "Acúmulo de registros e competição por escrita degradam a mesma base usada pelas contas.",
+        "Cadastros com identificadores distintos são possíveis, mas a saturação não foi medida.",
+        "A rota pública aceita requisições com dados de cadastro.",
+        "A degradação do SQLite pode afetar operações de outros usuários.",
+        "O custo das operações é identificável no código e no formulário."
+      ],
+      "tipo_camada": "Preventivo e detectivo / aplicação e dados",
+      "asvs_5_0_0": [
+        "2.4.1"
+      ],
+      "cheat_sheet": "AUTH",
+      "lgpd_art46": true,
+      "mitigacao": "Limitar cadastros por origem e período com controle contra abuso distribuído, verificar endereço de cadastro e remover contas incompletas conforme regra de retenção.",
+      "criterio_aceite": "Uma sequência de cadastros sintéticos acima da política deve ser contida, com criação e reset legítimos preservados.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX2-06",
+      "fluxo": "FX2",
+      "titulo": "Atribuição de papel privilegiado no cadastro",
+      "stride": "E",
+      "propriedade": "Autorização",
+      "elementos": [
+        "P3"
+      ],
+      "cwe": [
+        "915",
+        "269"
+      ],
+      "owasp_top10_2021": "A01",
+      "status": "Plausível",
+      "evidencia": "server.ts e models/user.ts. O middleware do desafio registra role admin e prossegue. O teste upstream user.test.ts documenta o comportamento esperado.",
+      "cenario": "Um visitante E1 pode tentar enviar role privilegiado no cadastro em F11. P3 entrega o corpo à criação genérica e D1 aceita papéis previstos no esquema. Sem lista explícita de campos ou regra de atribuição do papel inicial, a conta criada pode ganhar autorização de administrador ou contabilidade.",
+      "controle_existente": "O modelo aplica customer como padrão e valida o conjunto de papéis aceitos. Esses controles não restringem o papel recebido a customer.",
+      "notas": [
+        10,
+        8,
+        9,
+        9,
+        9
+      ],
+      "justificativas": [
+        "O papel privilegiado pode alcançar dados e operações coletivas.",
+        "Há caminho e teste upstream, sem reprodução no laboratório da equipe.",
+        "A operação de registro é pública e o vetor é um campo do corpo.",
+        "O papel pode afetar contas e compras de diversos titulares.",
+        "O campo role é reconhecível pelo esquema e pelo código do desafio."
+      ],
+      "tipo_camada": "Preventivo / aplicação",
+      "asvs_5_0_0": [
+        "8.2.1",
+        "8.2.3",
+        "8.3.1"
+      ],
+      "cheat_sheet": "MASS",
+      "lgpd_art46": true,
+      "mitigacao": "Usar um DTO de cadastro com campos permitidos e gravar customer a partir de regra interna. Alterar papel somente em operação administrativa distinta, autorizada e auditada.",
+      "criterio_aceite": "Pedidos de cadastro com role admin, accounting ou deluxe devem ser rejeitados ou gravados exclusivamente como customer. O perfil emitido deve refletir o papel persistido.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX3-01",
+      "fluxo": "FX3",
+      "titulo": "Reutilização de sessão de comprador",
+      "stride": "S",
+      "propriedade": "Autenticidade",
+      "elementos": [
+        "P4",
+        "P1",
+        "E2"
+      ],
+      "cwe": [
+        "294",
+        "613"
+      ],
+      "owasp_top10_2021": "A07",
+      "status": "Plausível",
+      "evidencia": "login.component.ts, request.interceptor.ts, navbar.component.ts e lib/insecurity.ts. JWT amostral sem exp na M1.",
+      "cenario": "Um agente que obtenha o token de um comprador pode se apresentar como E2 em P4 por F13. O token portador armazenado em D0 é reutilizável e a limpeza local no logout não demonstra revogação no servidor. O agente pode consultar dados ou operar como o comprador.",
+      "controle_existente": "Rotas de cesta verificam autenticação e consultam a identidade no mapa de sessões. O logout limpa o estado no navegador.",
+      "notas": [
+        8,
+        7,
+        6,
+        7,
+        7
+      ],
+      "justificativas": [
+        "A sessão permite agir sobre a cesta e dados vinculados a uma conta.",
+        "O replay depende de capturar um token ainda aceito.",
+        "Primeiro é necessário acesso à credencial de sessão.",
+        "Cada token reutilizado afeta a conta à qual está vinculado.",
+        "O armazenamento e a ausência de exp nas amostras são verificáveis."
+      ],
+      "tipo_camada": "Preventivo e corretivo / aplicação e rede",
+      "asvs_5_0_0": [
+        "7.3.2",
+        "7.4.1",
+        "12.2.1"
+      ],
+      "cheat_sheet": "SESS",
+      "lgpd_art46": true,
+      "mitigacao": "Aplicar HTTPS fora do laboratório e sessão curta com revogação no servidor. Preferir cookie HttpOnly, Secure e SameSite para sessão no mesmo domínio, com defesa contra CSRF nas ações de escrita.",
+      "criterio_aceite": "Após encerrar ou expirar uma sessão de teste, a mesma credencial deve falhar nas leituras e escritas de cesta.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX3-02",
+      "fluxo": "FX3",
+      "titulo": "Checkout de cesta alheia ou referências indevidas",
+      "stride": "T",
+      "propriedade": "Integridade",
+      "elementos": [
+        "P4",
+        "F13",
+        "F27",
+        "F29",
+        "D1",
+        "D3"
+      ],
+      "cwe": [
+        "639",
+        "862"
+      ],
+      "owasp_top10_2021": "A01",
+      "status": "Plausível",
+      "evidencia": "routes/order.ts. O método procura a cesta por id e lê paymentId e addressId enviados no corpo.",
+      "cenario": "Um comprador E2 pode alterar o identificador da cesta em F13 ou informar referências de endereço e pagamento fora da sua conta. P4 busca a cesta pelo ID recebido e grava referências no pedido. Se o checkout prosseguir, pode registrar compra inconsistente e remover itens da cesta de terceiro.",
+      "controle_existente": "O servidor associa o UserId à sessão e calcula preços e entrega com dados internos. O fluxo de leitura de cartão e endereço tem filtros próprios.",
+      "notas": [
+        9,
+        8,
+        7,
+        8,
+        7
+      ],
+      "justificativas": [
+        "A escrita pode alterar cestas, comprometer a integridade de pedidos e gerar disputa.",
+        "O código mostra o caminho, mas a alteração da cesta alheia não foi executada na M1.",
+        "Requer conta válida, objeto elegível e montagem do pedido.",
+        "A mesma condição pode afetar diferentes titulares se os IDs forem conhecidos.",
+        "A rota usa um identificador visível e o código indica onde é consumido."
+      ],
+      "tipo_camada": "Preventivo / aplicação e dados",
+      "asvs_5_0_0": [
+        "2.3.1",
+        "2.3.3",
+        "8.2.2"
+      ],
+      "cheat_sheet": "AUTHZ",
+      "lgpd_art46": true,
+      "mitigacao": "Consultar cesta e referências pela chave do objeto mais o titular da sessão. Recalcular valores no servidor, validar estoque e usar operação idempotente com compensação explícita para efeitos distribuídos entre SQLite, MarsDB e PDF.",
+      "criterio_aceite": "Com duas contas sintéticas, negar o checkout com cesta, endereço ou cartão da outra conta. Reenviar o pedido autorizado deve produzir no máximo um pedido e um débito.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX3-03",
+      "fluxo": "FX3",
+      "titulo": "Contestação de pedido sem correlação de eventos",
+      "stride": "R",
+      "propriedade": "Não repúdio",
+      "elementos": [
+        "D5",
+        "P4",
+        "E2"
+      ],
+      "cwe": [
+        "778"
+      ],
+      "owasp_top10_2021": "A09",
+      "status": "Plausível",
+      "evidencia": "server.ts e routes/order.ts. Registro HTTP e coleção de pedido têm finalidades distintas.",
+      "cenario": "Um comprador E2 pode contestar a autoria de um checkout em P4 quando o registro de D5 não vincula a chamada em F43 ao identificador do pedido, à identidade validada e ao resultado do pagamento simulado. Isso dificulta reconstruir a transação e responder à disputa.",
+      "controle_existente": "Há confirmação com orderId e registro de horário, rota e status HTTP. O histórico mascara vogais do e-mail.",
+      "notas": [
+        7,
+        7,
+        6,
+        6,
+        6
+      ],
+      "justificativas": [
+        "A operação contestada pode exigir reversão e investigação manual.",
+        "As rotas repetem o mesmo formato de log.",
+        "É preciso existir um pedido e uma disputa de autoria.",
+        "O impacto incide nos titulares e pedidos sem correlação.",
+        "A lacuna aparece ao comparar registros de acesso e histórico."
+      ],
+      "tipo_camada": "Detectivo e corretivo / aplicação e processo",
+      "asvs_5_0_0": [
+        "16.2.1",
+        "16.2.5",
+        "16.4.2"
+      ],
+      "cheat_sheet": "LOG",
+      "lgpd_art46": true,
+      "mitigacao": "Emitir evento de pedido com ID interno do ator, orderId, cesta, chave de idempotência, horário e resultado. Enviar a trilha protegida sem número de cartão nem endereço completo.",
+      "criterio_aceite": "Dois pedidos de teste devem ser localizados por orderId na trilha. Tentativas de alterar o evento pela conta do serviço devem falhar.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX3-04",
+      "fluxo": "FX3",
+      "titulo": "Erro de autorização com detalhes internos",
+      "stride": "I",
+      "propriedade": "Confidencialidade",
+      "elementos": [
+        "F14",
+        "P4",
+        "P1"
+      ],
+      "cwe": [
+        "209"
+      ],
+      "owasp_top10_2021": "A05",
+      "status": "Confirmada no T1",
+      "evidencia": "V4. Authorization malformado na rota de cesta retornou HTML com framework e versão declarada.",
+      "cenario": "Um visitante E1 com acesso local pode induzir erro ao enviar Authorization malformado para F13. O tratamento devolve em F14 detalhes do framework em HTML, que o agente pode usar para reconhecimento do ambiente.",
+      "controle_existente": "Middleware rejeita credencial malformada. O handler de erro devolve título detalhado.",
+      "notas": [
+        4,
+        9,
+        9,
+        6,
+        8
+      ],
+      "justificativas": [
+        "A resposta evidencia tecnologia e versão, sem demonstrar acesso a dados de conta.",
+        "O T1 preservou requisição e corpo HTML da resposta.",
+        "Uma chamada com cabeçalho inválido é suficiente.",
+        "A informação descreve a instância e beneficia ataques posteriores.",
+        "O erro pode ser induzido diretamente na rota de cesta."
+      ],
+      "tipo_camada": "Preventivo e detectivo / aplicação",
+      "asvs_5_0_0": [
+        "13.4.2",
+        "13.4.6",
+        "16.5.1"
+      ],
+      "cheat_sheet": "ERR",
+      "lgpd_art46": true,
+      "mitigacao": "Responder falhas de autenticação com erro genérico em JSON e ID de correlação. Conservar detalhes necessários em registro de acesso restrito e validar cabeçalhos da configuração implantada.",
+      "criterio_aceite": "Um cabeçalho malformado deve devolver falha controlada sem versão, stack trace ou caminho interno.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX3-05",
+      "fluxo": "FX3",
+      "titulo": "Saturação por geração de comprovantes",
+      "stride": "D",
+      "propriedade": "Disponibilidade",
+      "elementos": [
+        "P4",
+        "D4",
+        "F13",
+        "F37"
+      ],
+      "cwe": [
+        "400"
+      ],
+      "owasp_top10_2021": "A04",
+      "status": "Plausível",
+      "evidencia": "routes/order.ts. O checkout produz PDF e grava no mesmo sistema de arquivos usado pela loja.",
+      "cenario": "Um comprador E2 pode disparar checkouts concorrentes em P4 e criar PDFs em D4. Sem orçamento de geração por conta e política de descarte identificados, o volume pode consumir CPU, descritores e espaço, degradando compras ou outras funções da instância.",
+      "controle_existente": "A rota requer sessão e cesta existente. O fluxo verifica estoque na inclusão de itens, com geração local de PDF no checkout.",
+      "notas": [
+        7,
+        6,
+        7,
+        8,
+        7
+      ],
+      "justificativas": [
+        "Recursos compartilhados tornam o checkout e o servidor suscetíveis a degradação.",
+        "O limiar de saturação depende da instância e não foi medido.",
+        "Uma conta válida permite iniciar checkouts, sob as condições do fluxo.",
+        "I/O e CPU são compartilhados com os demais compradores.",
+        "A geração de PDF e o armazenamento aparecem no caminho de compra."
+      ],
+      "tipo_camada": "Preventivo e detectivo / aplicação e operação",
+      "asvs_5_0_0": [
+        "2.4.1",
+        "13.1.3",
+        "14.2.7"
+      ],
+      "cheat_sheet": "DOS",
+      "lgpd_art46": true,
+      "mitigacao": "Impor limite de concorrência, tempo e tamanho de pedido e PDF por conta. Separar a área de comprovantes, aplicar quota e política de retenção e alertar sobre falhas de escrita.",
+      "criterio_aceite": "Um ensaio local controlado deve respeitar as cotas e manter acessíveis as consultas legítimas quando o limite de geração for atingido.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX3-06",
+      "fluxo": "FX3",
+      "titulo": "Leitura da cesta de outro titular",
+      "stride": "E",
+      "propriedade": "Autorização",
+      "elementos": [
+        "P4"
+      ],
+      "cwe": [
+        "639"
+      ],
+      "owasp_top10_2021": "A01",
+      "status": "Confirmada no T1",
+      "evidencia": "V3. Uma conta autenticada consultou a cesta de outra e recebeu HTTP 200 com dados da cesta.",
+      "cenario": "Um comprador E2 pode solicitar em F13 o ID da cesta de outro titular. P4 valida a sessão, mas consulta D1 pelo identificador sem filtrar o dono. O agente ultrapassa a autorização da própria conta e recebe itens e vínculo com outro usuário em F14.",
+      "controle_existente": "O middleware exige JWT e injeta UserId no corpo. A consulta de cesta usa o id da URL como filtro de objeto.",
+      "notas": [
+        8,
+        10,
+        8,
+        8,
+        8
+      ],
+      "justificativas": [
+        "A resposta expõe itens e vínculo de usuário de outra conta.",
+        "O T1 confirmou a leitura com duas contas de teste e evidência HTTP.",
+        "Exige uma conta válida e um ID diferente.",
+        "Identificadores numéricos permitem repetir o cenário para outros titulares.",
+        "O ID aparece na rota e é verificável pela interface de rede."
+      ],
+      "tipo_camada": "Preventivo / aplicação e dados",
+      "asvs_5_0_0": [
+        "8.2.2",
+        "8.3.1"
+      ],
+      "cheat_sheet": "IDOR",
+      "lgpd_art46": true,
+      "mitigacao": "Derivar UserId do contexto validado e incluí-lo no filtro da consulta com a chave de cesta. Aplicar a mesma política de titularidade às operações de itens e checkout.",
+      "criterio_aceite": "Com JWT de A, uma leitura da cesta de B deve retornar 403 ou 404. A leitura da cesta de A deve continuar retornando apenas os dados autorizados.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX3-07",
+      "fluxo": "FX3",
+      "titulo": "Exposição de comprovante pelo diretório HTTP",
+      "stride": "I",
+      "propriedade": "Confidencialidade",
+      "elementos": [
+        "P6",
+        "P1",
+        "P4",
+        "D4",
+        "F18",
+        "F37",
+        "F39",
+        "F40"
+      ],
+      "cwe": [
+        "548",
+        "862"
+      ],
+      "owasp_top10_2021": "A05",
+      "status": "Plausível",
+      "evidencia": "V5 confirma o canal público /ftp/. routes/order.ts e routes/fileServer.ts ligam o PDF de pedido ao canal. A M1 não capturou um comprovante de terceiro.",
+      "cenario": "Um visitante com acesso local pode tentar localizar um comprovante em D4 e solicitá-lo a P6. O checkout grava o PDF no diretório servido via HTTP, e a entrega de arquivos não verifica titularidade. Se o arquivo estiver presente, a exposição pode incluir e-mail e detalhes do pedido.",
+      "controle_existente": "Há restrições de formato e caminho no manipulador. O nome incorpora uma parte aleatória. V5 comprova a listagem de documentos de exemplo.",
+      "notas": [
+        7,
+        8,
+        8,
+        7,
+        8
+      ],
+      "justificativas": [
+        "O PDF pode associar o titular a uma compra e revelar seus itens.",
+        "O caminho aparece no código, mas o acesso a um recibo de terceiro não foi exercitado no T1.",
+        "Se listado ou obtido o nome, basta a requisição HTTP.",
+        "O conjunto exposto depende dos comprovantes existentes e da retenção.",
+        "O caminho de download aparece na interface e há listagem do diretório."
+      ],
+      "tipo_camada": "Preventivo e corretivo / aplicação e dados",
+      "asvs_5_0_0": [
+        "8.2.2",
+        "13.4.3",
+        "14.2.7"
+      ],
+      "cheat_sheet": "AUTHZ",
+      "lgpd_art46": true,
+      "mitigacao": "Guardar PDFs em área privada, desativar a listagem e entregar comprovantes por rota que verifique titularidade no servidor. Revisar e remover artefatos públicos já gerados.",
+      "criterio_aceite": "Acesso sem sessão ou com conta alheia deve falhar tanto pela rota autenticada quanto pelo endereço público antigo.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX4-01",
+      "fluxo": "FX4",
+      "titulo": "Reuso de sessão contábil após desligamento",
+      "stride": "S",
+      "propriedade": "Autenticidade",
+      "elementos": [
+        "P5",
+        "E4",
+        "P1"
+      ],
+      "cwe": [
+        "613"
+      ],
+      "owasp_top10_2021": "A07",
+      "status": "Plausível",
+      "evidencia": "lib/insecurity.ts e routes/orderHistory.ts. isAccounting verifica assinatura e papel. A verificação observada no código não consulta estado atual da conta.",
+      "cenario": "Um ex-operador de contabilidade pode tentar apresentar em F15 um JWT emitido antes de perder acesso. P5 baseia a identidade contábil na assinatura e no papel transportado pelo token, permitindo que uma sessão antiga ainda represente E4 se o token continuar aceito.",
+      "controle_existente": "Existe verificação de assinatura e papel accounting no servidor para as duas rotas de pedido.",
+      "notas": [
+        8,
+        7,
+        6,
+        7,
+        7
+      ],
+      "justificativas": [
+        "A sessão contábil expõe pedidos e permite mudar estado de entrega.",
+        "O efeito exige token emitido e mudança de acesso, sequência não testada.",
+        "O agente precisa ter retido um token contábil utilizável.",
+        "O papel alcança mais pedidos do que uma sessão comum.",
+        "A implementação da verificação permite identificar as claims usadas."
+      ],
+      "tipo_camada": "Preventivo e corretivo / aplicação",
+      "asvs_5_0_0": [
+        "7.4.2",
+        "8.3.2",
+        "9.2.1"
+      ],
+      "cheat_sheet": "SESS",
+      "lgpd_art46": true,
+      "mitigacao": "Consultar estado e papel atual nas ações de contabilidade, revogar imediatamente as sessões de conta desativada ou rebaixada e validar as claims temporais.",
+      "criterio_aceite": "Obter token com papel accounting, remover esse papel em ambiente de teste e confirmar que o mesmo token deixa de ler ou atualizar pedidos.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX4-02",
+      "fluxo": "FX4",
+      "titulo": "Atualização de entrega baseada em estado do cliente",
+      "stride": "T",
+      "propriedade": "Integridade",
+      "elementos": [
+        "P5",
+        "D3",
+        "F15",
+        "F35"
+      ],
+      "cwe": [
+        "345",
+        "841"
+      ],
+      "owasp_top10_2021": "A04",
+      "status": "Plausível",
+      "evidencia": "routes/orderHistory.ts, toggleDeliveryStatus. O valor gravado deriva de !req.body.deliveryStatus.",
+      "cenario": "Um operador E4 pode enviar em F15 um estado anterior incorreto ou desatualizado. P5 inverte o valor recebido e grava em D3 sem comparar com a versão persistida. Com isso, pode desfazer uma atualização legítima ou produzir uma transição que não corresponde ao estado real.",
+      "controle_existente": "A rota exige papel accounting. A atualização seleciona o documento pelo _id.",
+      "notas": [
+        7,
+        8,
+        7,
+        7,
+        7
+      ],
+      "justificativas": [
+        "Um pedido pode figurar como entregue ou em trânsito no momento errado.",
+        "O caminho é determinístico quando o corpo diverge do registro real.",
+        "Requer sessão contábil e identificador do pedido.",
+        "Cada gravação afeta o pedido escolhido, com repetição possível.",
+        "O corpo e a atribuição podem ser conferidos no código da versão."
+      ],
+      "tipo_camada": "Preventivo e detectivo / aplicação e dados",
+      "asvs_5_0_0": [
+        "2.3.1",
+        "2.3.3"
+      ],
+      "cheat_sheet": "BIZ",
+      "lgpd_art46": true,
+      "mitigacao": "Receber estado de destino e versão esperada, validar transições permitidas e aplicar atualização condicional atômica no documento. Informar conflito quando a versão divergir ou 404 quando o pedido não existir.",
+      "criterio_aceite": "Duas alterações concorrentes com a mesma versão devem produzir no máximo um sucesso. Versão velha, estado inválido e ID ausente devem ser rejeitados.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX4-03",
+      "fluxo": "FX4",
+      "titulo": "Repúdio de moderação e entrega",
+      "stride": "R",
+      "propriedade": "Não repúdio",
+      "elementos": [
+        "D5",
+        "P5",
+        "E3",
+        "E4"
+      ],
+      "cwe": [
+        "778"
+      ],
+      "owasp_top10_2021": "A09",
+      "status": "Plausível",
+      "evidencia": "server.ts, Morgan combined, e handlers de feedback e pedido. Não foi identificada trilha de antes e depois para o escopo.",
+      "cenario": "Um administrador E3 ou operador E4 pode contestar a exclusão de um feedback ou uma alteração de entrega. F44 e D5 registram o acesso HTTP, porém não preservam de forma associada autor validado, estado anterior e resultado da ação.",
+      "controle_existente": "Há registro de horário, rota, método e status na camada HTTP.",
+      "notas": [
+        7,
+        7,
+        7,
+        7,
+        6
+      ],
+      "justificativas": [
+        "A falta de atribuição dificulta responsabilização e correção de pedidos e feedbacks.",
+        "As ações selecionadas passam pelo mesmo registro HTTP.",
+        "O agente precisa praticar ou contestar uma ação em investigação.",
+        "As duas operações podem atingir recursos de vários titulares.",
+        "A deficiência depende da inspeção do registro e da rota."
+      ],
+      "tipo_camada": "Detectivo e corretivo / aplicação e processo",
+      "asvs_5_0_0": [
+        "16.2.1",
+        "16.3.2",
+        "16.4.2",
+        "16.4.3"
+      ],
+      "cheat_sheet": "LOG",
+      "lgpd_art46": true,
+      "mitigacao": "Gravar auditoria com ator, papel efetivo, recurso, valores pertinentes antes e depois, decisão de autorização e horário. Separar o destino e proteger escrita e retenção.",
+      "criterio_aceite": "Excluir um feedback de teste e alterar entrega deve gerar eventos distintos e íntegros. Credenciais e corpo integral de pedidos devem ficar fora da trilha.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX4-04",
+      "fluxo": "FX4",
+      "titulo": "Consulta de usuários por conta comum",
+      "stride": "I",
+      "propriedade": "Confidencialidade",
+      "elementos": [
+        "F16",
+        "P1",
+        "P5",
+        "F32",
+        "F46"
+      ],
+      "cwe": [
+        "862",
+        "200"
+      ],
+      "owasp_top10_2021": "A01",
+      "status": "Plausível",
+      "evidencia": "server.ts, authenticatedUsers.ts e user.service.ts. A listagem da interface chama authentication-details. Essa rota e GET /api/Users usam isAuthorized sem checagem de admin.",
+      "cenario": "Um comprador com JWT válido pode chamar diretamente P5 por F15 e tentar obter a lista de usuários em F16. O servidor verifica autenticação sem conferir o papel administrativo, expondo dados de contas, como e-mails e papéis, fora da finalidade da sessão.",
+      "controle_existente": "authentication-details mascara password e totpSecret. GET /api/Users os exclui. O AdminGuard limita a navegação na SPA.",
+      "notas": [
+        8,
+        9,
+        8,
+        9,
+        9
+      ],
+      "justificativas": [
+        "A lista reúne dados identificáveis de várias contas.",
+        "A rota e o middleware são conhecidos, com confirmação local ainda pendente.",
+        "Uma sessão comum e cliente HTTP bastariam no cenário descrito.",
+        "Uma única listagem pode alcançar diversos titulares.",
+        "A interface administrativa revela a rota de listagem em suas chamadas."
+      ],
+      "tipo_camada": "Preventivo / aplicação e dados",
+      "asvs_5_0_0": [
+        "8.2.1",
+        "8.2.3",
+        "8.3.1",
+        "14.2.6"
+      ],
+      "cheat_sheet": "AUTHZ",
+      "lgpd_art46": true,
+      "mitigacao": "Exigir permissão explícita de leitura de contas no servidor, limitar campos à finalidade da tela e paginar o resultado. Registrar consultas privilegiadas.",
+      "criterio_aceite": "Token de cliente ou contabilidade sem permissão deve receber 403. A resposta autorizada deve conter apenas os campos permitidos.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX4-05",
+      "fluxo": "FX4",
+      "titulo": "Listagem administrativa sem limite de volume",
+      "stride": "D",
+      "propriedade": "Disponibilidade",
+      "elementos": [
+        "P5",
+        "F15",
+        "F16",
+        "D3",
+        "F35",
+        "F36"
+      ],
+      "cwe": [
+        "400"
+      ],
+      "owasp_top10_2021": "A04",
+      "status": "Plausível",
+      "evidencia": "routes/orderHistory.ts, allOrders chama find() e reverse() sem paginação. O acesso requer accounting.",
+      "cenario": "Um operador E4 pode repetir a listagem integral de pedidos em P5 e D3. À medida que a coleção cresce, leitura, ordenação inversa e serialização podem ocupar memória e CPU, degradando o atendimento aos demais usuários.",
+      "controle_existente": "A rota exige o papel accounting e usa uma coleção em memória. A consulta não tem paginação no trecho analisado.",
+      "notas": [
+        7,
+        6,
+        6,
+        8,
+        7
+      ],
+      "justificativas": [
+        "A pressão sobre o processo compartilhado pode afetar atendimento e back-office.",
+        "O limiar depende de volume e concorrência, que não foram ensaiados.",
+        "É necessária sessão contábil e uma coleção com volume significativo.",
+        "O servidor de pedidos também atende outros fluxos da loja.",
+        "É possível identificar listagem integral pelo método da rota."
+      ],
+      "tipo_camada": "Preventivo e detectivo / aplicação e dados",
+      "asvs_5_0_0": [
+        "2.4.1",
+        "13.1.3"
+      ],
+      "cheat_sheet": "DOS",
+      "lgpd_art46": true,
+      "mitigacao": "Implementar paginação no servidor com tamanho máximo, consulta por filtros e limite por identidade. Medir latência e tamanho da resposta por rota.",
+      "criterio_aceite": "Com massa sintética crescente, o tamanho máximo da página deve ser respeitado e uma consulta legítima simultânea deve continuar atendida.",
+      "decisao": "Mitigar"
+    },
+    {
+      "id": "T-FX4-06",
+      "fluxo": "FX4",
+      "titulo": "Exclusão de feedback por conta sem papel administrativo",
+      "stride": "E",
+      "propriedade": "Autorização",
+      "elementos": [
+        "P5"
+      ],
+      "cwe": [
+        "862",
+        "285"
+      ],
+      "owasp_top10_2021": "A01",
+      "status": "Plausível",
+      "evidencia": "server.ts e administration.component.ts. DELETE /api/Feedbacks/:id passa por isAuthorized e pelo recurso gerado. A M1 não testou essa ação.",
+      "cenario": "Um comprador com JWT válido pode tentar excluir um feedback em P5 enviando o ID pelo fluxo F15. A rota protegida apenas por autenticação pode aceitar uma função reservada e remover de D1 um registro que a conta não tem permissão de moderar.",
+      "controle_existente": "A guarda da SPA restringe a tela de administração. A rota requer JWT, e o PUT possui bloqueio específico.",
+      "notas": [
+        8,
+        8,
+        8,
+        8,
+        9
+      ],
+      "justificativas": [
+        "A exclusão pode adulterar a percepção do catálogo e retirar manifestações de terceiros.",
+        "A hipótese foi localizada em código. O efeito não foi reproduzido na M1.",
+        "Uma conta comum e o ID de feedback seriam suficientes no cenário.",
+        "O mesmo controle protege a operação para todos os feedbacks.",
+        "O endpoint é usado pela interface e identificável no código."
+      ],
+      "tipo_camada": "Preventivo e detectivo / aplicação",
+      "asvs_5_0_0": [
+        "8.2.1",
+        "8.3.1",
+        "16.3.2"
+      ],
+      "cheat_sheet": "AUTHZ",
+      "lgpd_art46": true,
+      "mitigacao": "Exigir permissão de moderação na rota DELETE, negar por padrão e registrar autor e recurso. Controlar reversão ou retenção de moderação conforme a finalidade do feedback.",
+      "criterio_aceite": "Em instância de teste, cliente sem permissão recebe 403 e o feedback permanece. Operador autorizado pode moderar e a trilha registra a decisão.",
+      "decisao": "Mitigar"
+    }
+  ],
+  "evidencias_m1": [
+    {
+      "id": "V1",
+      "owasp": "A03",
+      "cwe": "CWE-89",
+      "cvss": "9,1",
+      "achado": "SQL injection em POST /rest/user/login e entrada como admin.",
+      "localizacao": "FX1 / P2, F09, F21 e D1",
+      "relacao": "T-FX1-02",
+      "arquivo": "evidencias/V1-sqli-login/http/01-response.http"
+    },
+    {
+      "id": "V2",
+      "owasp": "A02",
+      "cwe": "CWE-522 e CWE-916",
+      "cvss": "6,5",
+      "achado": "Hash MD5 no payload de JWT de conta própria. Encadeado com V1, a M1 registrou 7,5.",
+      "localizacao": "FX1 / P2, F10, D0 e D2",
+      "relacao": "T-FX1-04",
+      "arquivo": "evidencias/V2-hash-senha-jwt/analise-jwt.txt"
+    },
+    {
+      "id": "V3",
+      "owasp": "A01",
+      "cwe": "CWE-639",
+      "cvss": "6,5",
+      "achado": "Consulta da cesta da conta A com JWT válido da conta B. Sem token, o acesso foi recusado.",
+      "localizacao": "FX3 / P4, F13, F14, F27 e D1",
+      "relacao": "T-FX3-06",
+      "arquivo": "evidencias/V3-idor-cesta/http/06-response.http"
+    },
+    {
+      "id": "V4",
+      "owasp": "A05",
+      "cwe": "CWE-209",
+      "cvss": "5,3",
+      "achado": "Erro detalhado com Authorization malformado na rota de cesta. A resposta inicial examinada não continha CSP ou HSTS.",
+      "localizacao": "FX3 / P4, F13 e F14",
+      "relacao": "T-FX3-04",
+      "arquivo": "evidencias/V4-erro-verboso-headers/http/01-response-body.html"
+    },
+    {
+      "id": "V5",
+      "owasp": "A05",
+      "cwe": "CWE-548",
+      "cvss": "7,5",
+      "achado": "Listagem e download anônimos em /ftp/ para documento de exemplo.",
+      "localizacao": "P6, F17, F18 e D4. Evidência para o canal de exposição do FX3.",
+      "relacao": "Apoia T-FX3-07, que examina PDF de pedido.",
+      "arquivo": "evidencias/V5-listagem-diretorio-ftp/http/01-response-headers.txt"
+    },
+    {
+      "id": "V6",
+      "owasp": "A07",
+      "cwe": "CWE-307",
+      "cvss": "6,5",
+      "achado": "Quinze falhas HTTP 401 em sequência, seguidas de login correto HTTP 200, sem bloqueio observado nessa amostra.",
+      "localizacao": "FX1 / P2 e F09",
+      "relacao": "T-FX1-01",
+      "arquivo": "evidencias/V6-bruteforce-login/http/17-response.http"
+    },
+    {
+      "id": "V7",
+      "owasp": "A04",
+      "cwe": "CWE-640",
+      "cvss": "9,1",
+      "achado": "Consulta da pergunta associada e redefinição no quinto palpite, dentro da cota de 100 indicada pela resposta.",
+      "localizacao": "FX2 / P3, F11, F12 e D1",
+      "relacao": "T-FX2-01 e T-FX2-04",
+      "arquivo": "evidencias/V7-reset-senha-pergunta-seguranca/http/09-response.http"
+    }
+  ],
+  "cheat_sheets": {
+    "AUTH": {
+      "titulo": "Authentication Cheat Sheet",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html"
+    },
+    "SQLI": {
+      "titulo": "SQL Injection Prevention Cheat Sheet",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html"
+    },
+    "LOG": {
+      "titulo": "Logging Cheat Sheet",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html"
+    },
+    "PASS": {
+      "titulo": "Password Storage Cheat Sheet",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html"
+    },
+    "SESS": {
+      "titulo": "Session Management Cheat Sheet",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html"
+    },
+    "SECRETS": {
+      "titulo": "Secrets Management Cheat Sheet",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html"
+    },
+    "RESET": {
+      "titulo": "Forgot Password Cheat Sheet",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html"
+    },
+    "AUTHZ": {
+      "titulo": "Authorization Cheat Sheet",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html"
+    },
+    "MASS": {
+      "titulo": "Mass Assignment Cheat Sheet",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Mass_Assignment_Cheat_Sheet.html"
+    },
+    "ERR": {
+      "titulo": "Error Handling Cheat Sheet",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html"
+    },
+    "IDOR": {
+      "titulo": "Insecure Direct Object Reference Prevention Cheat Sheet",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Insecure_Direct_Object_Reference_Prevention_Cheat_Sheet.html"
+    },
+    "DOS": {
+      "titulo": "Denial of Service Cheat Sheet",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Denial_of_Service_Cheat_Sheet.html"
+    },
+    "BIZ": {
+      "titulo": "Business Logic Security Cheat Sheet",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Business_Logic_Security_Cheat_Sheet.html"
+    }
+  }
+}
