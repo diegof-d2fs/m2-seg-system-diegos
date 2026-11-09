@@ -15,8 +15,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="css/styles.css?v=3">
-  <script type="module" src="js/presenter.js?v=3"></script>
+  <link rel="stylesheet" href="css/styles.css?v=5">
+  <script type="module" src="js/presenter.js?v=5"></script>
 </head>
 <body>
   <main class="slide-viewport" id="viewport"><div class="slide-stage" id="stage"></div></main>
@@ -32,6 +32,11 @@
   <nav class="toc" id="toc" aria-label="Sumário dos slides" hidden></nav>
   <div class="progress" aria-hidden="true"><div class="progress-fill" id="progress"></div></div>
   <div class="sr-only" aria-live="polite" id="live"></div>
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Imagem ampliada" hidden>
+    <p class="lightbox-caption" id="lightbox-caption"></p>
+    <button class="lightbox-close" id="lightbox-close" aria-label="Fechar imagem ampliada (Esc)">×</button>
+    <div class="lightbox-frame" id="lightbox-frame"></div>
+  </div>
   <noscript>Esta apresentação precisa de JavaScript para ser exibida.</noscript>
 </body>
 </html>

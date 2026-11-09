@@ -22,7 +22,7 @@ export default () => SlideLayout({
       </div>
       <div class="apm-stack" style="gap:22px;justify-content:center">
         ${Card({ accent: "orange", style: compact, title: "T-FX2-06 · Papel no cadastro — DREAD 9,0", children: Bullets({ size: 22, accent: "orange", items: ["<code>role: admin</code> aceito do cliente (mass assignment)", "Conta criada já como <strong>administrador</strong> · CWE-915 · A01"] }) })}
-        ${Card({ accent: "turquoise", style: compact, title: "T-FX2-01 · Resposta previsível — 8,8", children: Bullets({ size: 22, items: ["Pergunta consultável; reset no 5º palpite (V7)", "Confirmada no T1 · CWE-640 · A07"] }) })}
+        ${Card({ accent: "turquoise", style: compact, title: "T-FX2-01 · Resposta previsível — 8,8", children: Bullets({ size: 22, items: ["Pergunta consultável; reset no 5º palpite (V7)", "Confirmada no T1 · CWE-640 · A04"] }) })}
         ${Highlight({ accent: "orange", children: "Papel só no <strong>servidor</strong>; recuperação de <strong>uso único</strong> e resposta uniforme." })}
       </div>
     </div>`,

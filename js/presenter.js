@@ -1,5 +1,5 @@
 import { mountStage } from "./stage.js";
-import { SLIDES } from "./slides/index.js";
+import { SLIDES } from "./slides/index.js?v=5";
 import { SECTION_LABELS } from "./meta.js";
 
 const N = SLIDES.length;
@@ -87,6 +87,49 @@ function toggleFs() {
 
 function setToc(open) { tocOpen = open; render(); }
 
+// --------- Lightbox: clicar numa imagem/gráfico do slide abre ampliado ---------
+const lightbox = $("lightbox");
+const lbFrame = $("lightbox-frame");
+const lbCaption = $("lightbox-caption");
+let lbReturnFocus = null;
+
+const lbOpen = () => !lightbox.hidden;
+
+function openLightbox(el) {
+  lbFrame.innerHTML = "";
+  lbFrame.className = "lightbox-frame";
+  let label = "";
+  if (el.tagName === "IMG") {
+    const img = document.createElement("img");
+    img.src = el.currentSrc || el.src;
+    img.alt = el.alt || "";
+    label = el.alt || "";
+    // Diagramas SVG e figuras em painel claro ficam sobre fundo branco.
+    if (/\.svg(\?|$)/i.test(img.src) || el.closest(".apm-figure-light") ||
+        (el.closest(".apm-figure") && el.closest(".apm-figure").style.background.includes("255")))
+      lbFrame.classList.add("is-light");
+    lbFrame.appendChild(img);
+  } else {
+    // Gráfico em SVG inline: clona o nó.
+    const svg = el.cloneNode(true);
+    svg.removeAttribute("width");
+    label = svg.getAttribute("aria-label") || "Gráfico";
+    lbFrame.classList.add("is-chart");
+    lbFrame.appendChild(svg);
+  }
+  lbCaption.textContent = label ? `${label} · Esc ou × para voltar` : "Esc ou × para voltar";
+  lbReturnFocus = document.activeElement;
+  lightbox.hidden = false;
+  $("lightbox-close").focus();
+}
+
+function closeLightbox() {
+  if (!lbOpen()) return;
+  lightbox.hidden = true;
+  lbFrame.innerHTML = "";
+  if (lbReturnFocus && lbReturnFocus.focus) lbReturnFocus.focus();
+}
+
 // --------- Eventos ---------
 function init() {
   mountStage(viewport, stage);
@@ -107,7 +150,20 @@ function init() {
     goTo(Number(b.dataset.goto));
   });
 
+  stage.addEventListener("click", e => {
+    const el = e.target.closest(".slide-body-area img, .slide-body-area .apm-chart svg");
+    if (el) openLightbox(el);
+  });
+  $("lightbox-close").addEventListener("click", closeLightbox);
+  lightbox.addEventListener("click", e => { if (e.target === lightbox) closeLightbox(); });
+
   window.addEventListener("keydown", e => {
+    if (lbOpen()) {
+      // Com a imagem aberta, as teclas não trocam de slide.
+      if (e.key === "Escape" || e.key === "Backspace") { e.preventDefault(); closeLightbox(); }
+      else if (e.key !== "Tab") e.preventDefault();
+      return;
+    }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     switch (e.key) {
       case "ArrowRight": case " ": case "PageDown": e.preventDefault(); goTo(current + 1); break;

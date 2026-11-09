@@ -178,7 +178,7 @@ html, body {
 .apm-numbered li > .apm-num { font-variant-numeric: tabular-nums; font-weight: 700; min-width: 34px; flex: none; }
 
 /* ----------------------------------------------------------------- Flow --- */
-.apm-flow { display: flex; align-items: stretch; gap: 0; flex-wrap: wrap; }
+.apm-flow { display: flex; align-items: stretch; gap: 0; flex-wrap: nowrap; }
 .apm-flow-step {
   background: rgba(255, 255, 255, .05);
   border: 1px solid var(--apm-border);
@@ -187,8 +187,11 @@ html, body {
   font-size: 26px;
   color: var(--apm-fg-2);
   display: flex;
-  align-items: center;
+  flex: 1 1 0;
+  flex-direction: column;
+  justify-content: center;
 }
+.apm-flow-step br { display: none; }
 .apm-flow-arrow { font-size: 34px; align-self: center; margin: 0 14px; font-weight: 700; }
 
 /* ------------------------------------------------------------ Highlight --- */
@@ -417,3 +420,48 @@ html, body {
   .cola-section[data-hidden="true"] { display: none; }
   .cola-code { color: #000; background: #eee; }
 }
+
+/* ------------------------------------------------ Lightbox de imagens ----- */
+.slide-body-area img, .slide-body-area .apm-chart svg { cursor: zoom-in; }
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 24px 24px;
+  background: rgba(2, 10, 24, .92);
+  cursor: zoom-out;
+}
+.lightbox[hidden] { display: none; }
+.lightbox-frame {
+  width: min(96vw, 2400px);
+  height: calc(100vh - 96px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: default;
+}
+.lightbox-frame.is-light { background: #fff; padding: 16px; }
+.lightbox-frame img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.lightbox-frame svg { width: 100%; height: 100%; display: block; }
+.lightbox-frame.is-chart { background: var(--apm-surface); padding: 32px; }
+.lightbox-close {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--apm-border-strong);
+  background: rgba(255, 255, 255, .12);
+  color: var(--apm-fg);
+  font: 600 28px/1 var(--font);
+  cursor: pointer;
+}
+.lightbox-close:hover { background: rgba(255, 255, 255, .22); }
+.lightbox-close:focus-visible { outline: 3px solid var(--apm-turquoise); outline-offset: 2px; }
+.lightbox-caption { position: fixed; left: 24px; top: 20px; right: 80px; color: var(--apm-muted); font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
