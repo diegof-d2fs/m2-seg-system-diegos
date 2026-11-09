@@ -1,31 +1,26 @@
 import { SlideLayout } from "../layout.js";
-import { Card, Bullets, Highlight, Table } from "../kit.js";
+import { Card, Bullets, Highlight, Caption } from "../kit.js";
+
+const compact = "padding:22px 26px";
 
 export default () => SlideLayout({
   kicker: "FX4 · Administração e contabilidade",
   title: "Função privilegiada e vários titulares",
   content: `
-    <div style="display:grid;grid-template-columns:1.1fr .9fr;gap:36px;height:100%">
-      <div class="apm-stack-26">
-        ${Card({ accent: "orange", title: "T-FX4-04 · Consulta de usuários (8,6)", children: Bullets({ size: 23, accent: "orange", items: [
-          "Rota de listagem de contas sem verificação de papel",
-          "Conta comum acessaria dados de <strong>muitos titulares</strong>",
-          "Plausível · CWE-284 · A01",
-        ] }) })}
-        ${Card({ accent: "turquoise", title: "T-FX4-06 · Exclusão de feedback (8,2)", children: Bullets({ size: 23, items: [
-          "DELETE de feedback sem exigir papel admin",
-          "Verificação de função desigual entre rotas",
-          "Plausível · CWE-285 · A01",
-        ] }) })}
+    <div style="display:grid;grid-template-columns:1fr 1.05fr;gap:34px;height:100%">
+      <div class="apm-stack" style="gap:20px;justify-content:center">
+        <div class="apm-figure apm-figure-light" style="padding:8px 12px">
+          <img src="assets/dfd/fx4.svg" alt="Recorte do DFD do fluxo FX4" style="max-height:170px">
+        </div>
+        ${Card({ accent: "orange", style: compact, title: "T-FX4-04 · Consulta de usuários — 8,6", children: Bullets({ size: 22, accent: "orange", items: ["Listagem de contas sem verificação de papel", "Conta comum veria <strong>muitos titulares</strong> · A01"] }) })}
+        ${Card({ accent: "turquoise", style: compact, title: "T-FX4-06 · Exclusão de feedback — 8,2", children: Bullets({ size: 22, items: ["DELETE sem exigir admin; função desigual entre rotas"] }) })}
+        ${Highlight({ accent: "orange", children: "Matriz de <strong>papéis no servidor</strong> por rota; negar por padrão e registrar." })}
       </div>
-      <div class="apm-stack-26">
-        ${Table({ head: ["Outros cenários", "Risco"], rows: [
-          ["T-FX4-05 listagem sem limite de volume", "6,6"],
-          ["T-FX4-02 entrega baseada em estado do cliente", "6,4"],
-          ["T-FX4-01 reuso de sessão após desligamento", "6,0"],
-          ["T-FX4-03 repúdio de moderação/entrega", "5,4"],
-        ] })}
-        ${Highlight({ accent: "orange", children: "Matriz de papéis no servidor para cada rota privilegiada; negar por padrão e registrar a ação." })}
+      <div style="display:flex;flex-direction:column;gap:12px;min-height:0;justify-content:center">
+        <div class="apm-figure apm-figure-dark" style="flex:1;padding:10px">
+          <img class="apm-shot" src="assets/fig_admin_panel.png" alt="Painel de administração com lista de usuários e feedbacks">
+        </div>
+        ${Caption({ children: "Painel <code>/#/administration</code> alcançado na reprodução M2: lista de e-mails e feedbacks (desafio <em>Admin Section</em> reconhecido)." })}
       </div>
     </div>`,
 });

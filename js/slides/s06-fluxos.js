@@ -1,5 +1,6 @@
 import { SlideLayout } from "../layout.js";
 import { Card, Bullets, Highlight } from "../kit.js";
+import { StrideChart } from "../charts.js";
 
 export default () => SlideLayout({
   kicker: "Análise · seleção dos fluxos",
@@ -7,16 +8,21 @@ export default () => SlideLayout({
   content: `
     <div class="apm-stack-26">
       <div class="apm-grid-4">
-        ${Card({ accent: "turquoise", title: "FX1 · Login e sessão", children: Bullets({ size: 22, items: ["Identidade de toda a loja", "Evidências M1: V1, V2, V6"] }) })}
-        ${Card({ accent: "violet", title: "FX2 · Cadastro e recuperação", children: Bullets({ size: 22, accent: "violet", items: ["Dados pessoais e reset", "Evidência M1: V7"] }) })}
-        ${Card({ accent: "pink", title: "FX3 · Cesta e pedido", children: Bullets({ size: 22, accent: "pink", items: ["Dados de compra e comprovante", "Evidências M1: V3, V4, V5"] }) })}
-        ${Card({ accent: "orange", title: "FX4 · Admin e contabilidade", children: Bullets({ size: 22, accent: "orange", items: ["Função privilegiada", "Vários titulares"] }) })}
+        ${Card({ accent: "turquoise", title: "FX1 · Login", children: Bullets({ size: 21, items: ["Identidade da loja", "M1: V1, V2, V6"] }) })}
+        ${Card({ accent: "violet", title: "FX2 · Cadastro", children: Bullets({ size: 21, accent: "violet", items: ["Dados pessoais, reset", "M1: V7"] }) })}
+        ${Card({ accent: "pink", title: "FX3 · Cesta e pedido", children: Bullets({ size: 21, accent: "pink", items: ["Compra e comprovante", "M1: V3, V4, V5"] }) })}
+        ${Card({ accent: "orange", title: "FX4 · Admin", children: Bullets({ size: 21, accent: "orange", items: ["Função privilegiada", "Vários titulares"] }) })}
       </div>
-      <div class="apm-grid-3">
-        ${Card({ title: "Critérios atendidos", children: Bullets({ size: 22, items: ["1 fluxo de autenticação (FX1)", "Fluxos com dado pessoal (FX2, FX3)", "Função privilegiada (FX4)"] }) })}
-        ${Card({ title: "Rastreabilidade", children: Bullets({ size: 22, accent: "violet", items: ["Todos cruzam uma fronteira", "3 fluxos com achados da M1", "IDs T-FX&lt;n&gt;-&lt;seq&gt;"] }) })}
-        ${Card({ title: "Volume", children: Bullets({ size: 22, accent: "pink", items: ["≥ 6 ameaças por fluxo", "25 cenários no total", "7 apoiados em 6 achados da M1"] }) })}
+      <div style="display:grid;grid-template-columns:1.15fr .85fr;gap:36px;flex:1;min-height:0">
+        ${Card({ title: "Distribuição das 25 ameaças por categoria STRIDE", style: "display:flex;flex-direction:column;justify-content:center", children: `<div class="apm-chart">${StrideChart()}</div>` })}
+        <div class="apm-stack-26" style="justify-content:center">
+          ${Bullets({ size: 23, items: [
+            "1 fluxo de <strong>autenticação</strong> (FX1) + dados pessoais (FX2, FX3)",
+            "Todos cruzam uma <strong>fronteira</strong>; 3 trazem achados da M1",
+            "≥ 6 ameaças por fluxo, cobrindo as seis categorias",
+          ] })}
+          ${Highlight({ children: "<strong>Information Disclosure</strong> lidera: exposição por token, resposta de erro, diretório e resposta de API." })}
+        </div>
       </div>
-      ${Highlight({ children: "Cobertura das seis categorias STRIDE em cada fluxo, com N/A justificado onde a categoria se aplica ao tipo mas não ao caso." })}
     </div>`,
 });

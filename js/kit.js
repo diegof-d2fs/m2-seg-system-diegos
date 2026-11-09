@@ -60,5 +60,15 @@ export const Placeholder = ({ children }) => `<div class="apm-placeholder">${chi
 
 export const Source = ({ children }) => `<p class="apm-source">${children}</p>`;
 
-export const Figure = ({ src, alt = "", style = "", shot = false }) =>
-  `<div class="apm-figure" style="${style}"><img class="${shot ? "apm-shot" : ""}" src="${src}" alt="${esc(alt)}"></div>`;
+export const Figure = ({ src, alt = "", style = "", shot = false, panel = "dark" }) =>
+  `<div class="apm-figure apm-figure-${panel}" style="${style}"><img class="${shot ? "apm-shot" : ""}" src="${src}" alt="${esc(alt)}"></div>`;
+
+// Legenda curta sob uma figura/print.
+export const Caption = ({ children }) => `<p class="apm-figcaption">${children}</p>`;
+
+// Painel de evidência estilo terminal/código. lines = [{k, v}] ou strings HTML.
+export const Evidence = ({ title, accent = "turquoise", lines }) => `
+  <div class="apm-evidence" style="box-shadow: inset 0 3px 0 0 ${accentVar(accent)}">
+    ${title ? `<div class="apm-evidence-head"><span class="dot ${accentClass(accent)}">●</span>${title}</div>` : ""}
+    <pre class="apm-evidence-body">${lines.map(l => typeof l === "string" ? l : `<span class="ev-k">${l.k}</span>  <span class="ev-v">${l.v}</span>`).join("\n")}</pre>
+  </div>`;
