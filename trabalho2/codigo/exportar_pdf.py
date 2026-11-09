@@ -6,6 +6,7 @@ import re
 
 from docx import Document
 from docx.oxml.ns import qn
+from docx.shared import Pt
 from docx.table import Table as WordTable
 from docx.text.paragraph import Paragraph as WordParagraph
 from reportlab.lib import colors
@@ -122,7 +123,7 @@ def export(source, target, table_size=9.0):
     if toc_xml is not None and toc_xml.xpath('.//w:instrText'):
         for heading,page in doc.heading_pages.items():
             p=WordParagraph(toc_xml,d).insert_paragraph_before(heading+'\t'+str(page),style='Índice M2')
-            p.paragraph_format.line_spacing=13
+            p.paragraph_format.line_spacing=Pt(13)
         toc_xml.getparent().remove(toc_xml)
         d.save(source)
 

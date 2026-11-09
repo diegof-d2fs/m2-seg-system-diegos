@@ -287,6 +287,11 @@ def main():
             for el in part.element.iter(qn('w:t')):
                 if el.text and '\u2014' in el.text:
                     el.text=clean(el.text)
+                if el.text:
+                    el.text=re.sub(r'Figura 11\b','captura histórica V5 no repositório de evidências',el.text)
+                    el.text=re.sub(r'[Ee]xtrato A2\b','registro HTTP de V7',el.text)
+                    el.text=re.sub(r'[Ee]xtrato A4\b','inspeção do código e dos testes da versão',el.text)
+                    el.text=el.text.replace('Responsável / revisor previstos','Responsável / revisor')
     settings=d.settings.element
     update=settings.find(qn('w:updateFields'))
     if update is None:
